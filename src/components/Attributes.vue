@@ -17,7 +17,7 @@
             </thead>
             <tbody>
                 <tr v-for="attribute of attributes" :key="attribute.id">
-                    <td>{{ attribute.name }}</td>
+                    <td><input class="rounded-input" v-model="attribute.name"></td>
                     <!-- <td>{{ atribute.min }}</td>
                     <td>{{ attribute.max }}</td> -->
                     <!-- <td>{{ attribute.type }}</td> -->
@@ -25,7 +25,7 @@
                     <!-- <td>{{ attribute.valueType }}</td> -->
                     <td>{{ attribute.domain != undefined ? attribute.domain.join(', ') : attribute.valueType }}</td>
                     <td><input type="checkbox" v-model="attribute.active" disabled=true></td>
-                    <td><input type="checkbox" v-model="attribute.filter"></td>
+                    <td><input type="checkbox" v-model="attribute.dispFilter"></td>
                     <!-- <td><input type="checkbox" v-model="attribute.display"></td> -->
                 </tr>
             </tbody>

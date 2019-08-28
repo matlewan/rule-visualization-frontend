@@ -6,7 +6,6 @@
               <div class="input-group col-xs-12">
                   <button class="browse btn-sm btn-secondary input" type="button" @click="browseAttributes">Browse</button>
                   <input id="attributesText" type="text" class="form-control input" disabled placeholder="Upload attributes file in JSON format">
-                  
               </div>
           </div>
           <div class="form-group">
@@ -20,11 +19,11 @@
       <span>{{ loadMsg }}</span><br>
       <button class="btn btn-primary" @click="submit">Submit</button>
       <button class="btn btn-info" @click="loadDemo">Load demo</button>
-      <div class="tabs">
+      <div class="tabs" v-if="attributes.length > 0">
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
         <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Characteristics</a>
       </div>
-      <div class="content">
+      <div class="content" v-if="attributes.length > 0">
         <Attributes :class="['tab-content', activetab != 1 ? 'hidden' : '']" :attributes="attributes"></Attributes>
         <Characteristics  :class="['tab-content', activetab != 2 ? 'hidden' : '']" :characteristics="characteristics"></Characteristics>
       </div>
@@ -57,9 +56,16 @@ var tmp_filename;
 function loadAttributes(component, data) {
     for (var i = 0; i < data.length; i++) {
       data[i].id = i+1;
+      data[i].srcName = data[i].name;
       data[i].active = data[i].name == "ID" ? false : data[i].active;
-      data[i].filter = data[i].active;
-      data[i].display = data[i].filter;
+      data[i].filter = false;
+      data[i].dispFilter = data[i].active;
+      if (data[i].type == 'decision') {
+          var last = data[i].domain.length-1;
+          data[i].min = 0 // data[i].domain[0];
+          data[i].max = last // data[i].domain[last]
+          Vue.set(data[i], 'range', [data[i].min, data[i].max])
+      }
     }
     component.attributes = data;
     component.attributes.sort((a, b) => a.active > b.active || a.active == b.active && a.name < b.name ? -1 : 1);
@@ -136,7 +142,7 @@ function loadDemo() {
   }).then(response => response.json())
   .then(function(data) {
     loadAttributes(component, data);
-    fetch('/data/big-rules.json', {
+    fetch('/data/rules.json', {
       method: 'GET'
     }).then(response => response.json())
     .then(data => loadRules(component, data));
@@ -163,6 +169,7 @@ function loadCharacteristics(component) {
   var i = 1;
   for (name in component.characteristics) {
       var c = component.characteristics[name];
+      c.name = name;
       c.active = (c.range[0] != c.range[1]);
       c.id = i; i += 1;
       c.filter = c.active;

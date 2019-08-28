@@ -13,7 +13,7 @@
             </thead>
             <tbody>
                 <tr v-for="(value, name) in characteristics" :key="name">
-                    <td>{{ name }}</td>
+                    <td><input class="rounded-input" v-model="value.name"></td>
                     <td>{{ value.min }}</td>
                     <td>{{ value.max }}</td>
                     <td><input type="checkbox" v-model="value.active" disabled=true></td>

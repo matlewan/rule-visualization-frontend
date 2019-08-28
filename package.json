@@ -11,9 +11,10 @@
   "dependencies": {
     "bootstrap": "^4.3.1",
     "core-js": "^2.6.5",
-    "jquery": "^3.4.1",
     "popper.js": "^1.15.0",
+    "tablesorter": "^2.31.1",
     "vue": "^2.6.10",
+    "vue-jquery": "^1.0.6",
     "vue-slider-component": "^3.0.34"
   },
   "devDependencies": {
@@ -41,7 +42,6 @@
       "plugin:vue/essential",
       "@vue/prettier"
     ],
-    "rules": {},
     "parserOptions": {
       "parser": "babel-eslint"
     }

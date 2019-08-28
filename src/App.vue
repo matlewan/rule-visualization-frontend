@@ -8,7 +8,9 @@
     </div>
     <div class="content">
         <FormLoader :class="['tab-content', activetab != 1 ? 'hidden' : '']"></FormLoader>
-        <FilterTab  :class="['tab-content', activetab != 2 ? 'hidden' : '']" :characteristics="characteristics" :attributes="attributes"></FilterTab>
+        <div style="float:left;">
+          <FilterTab  @apply="filterRules" :class="['tab-content', activetab != 2 ? 'hidden' : '']" :characteristics="characteristics" :attributes="attributes"></FilterTab>
+        </div>
         <TableTab  :class="['tab-content', activetab != 2 ? 'hidden' : '']" :rules="rules" :characteristics="characteristics"></TableTab>
         <div style="clear:both;"></div>
     </div>
@@ -32,15 +34,58 @@ export default {
     load(a, r, c) {
         window.app = this;
         this.attributes = a;
-        this.rules = r;
+        this.srcRules = r;
+        this.rules = Object.assign([], [...this.srcRules]);
         this.characteristics = c;
-    }
+    }, filterRules
   },
   components: {
     FormLoader, FilterTab, TableTab
   }
 };
 
+function filterRules(evt, input) {
+    var data = {}
+    data.attrInclude = this.attributes.filter(a => a.filter == true).map(a => a.srcName);
+    data.attrExclude = this.attributes.filter(a => a.filter == undefined).map(a => a.srcName);
+    data.dRange = this.attributes.filter(a => a.type == 'decision')[0].range;
+    data.characteristics = this.characteristics;
+    data.cNames = Object.keys(data.characteristics).filter(function(name) {
+        var c = data.characteristics[name];
+        return (c.range[0] > c.min || c.range[1] < c.max);
+    });
+
+    this.rules = Object.assign([], this.srcRules.filter(filterRule.bind(this, input, data)));
+    
+}
+function filterRule(input, data, rule) {
+    var attr = rule.conditions.map(c => c.name);
+    var attrE = attr.filter(a => data.attrExclude.includes(a));
+    if (attrE.length > 0)
+        return false;
+
+    if (data.attrInclude.length > 0) {
+        attr = attr.filter(a => data.attrInclude.includes(a));
+        if (input.aOperator == "AND" && attr.length < data.attrInclude.length)
+          return false;
+        if (input.aOperator == "OR" && attr.length == 0)
+          return false;
+    }
+
+    var decision = rule.decisions[0][0];
+    if (input.dOperator != '' && input.dOperator != decision.operator)
+        return false;
+    else if (decision.value < data.dRange[0] || decision.value > data.dRange[1])
+        return false;
+    
+    for (var name of data.cNames) {
+        var value = rule.characteristics[name];
+        var range = data.characteristics[name].range;
+        if (value < range[0] || value > range[1])
+            return false;
+    }
+    return true;
+}
 
 </script>
 
@@ -125,11 +170,15 @@ export default {
       cursor: default;
   }
 
+  .rule-table.scrollbar::-webkit-scrollbar-track {
+      margin-top: 30px;
+  }
+  
   .scrollbar::-webkit-scrollbar-track
   {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #F5F5F5;
-    margin-top: 31px;
   }
   .scrollbar::-webkit-scrollbar
   {
@@ -141,5 +190,14 @@ export default {
     background-color: #000000;
     border: 2px solid #555555;
   }
+  .rounded-input {
+      border-radius: .2rem;
+      margin: -.2rem 0;
+      
+  }
+
+  .table > tbody > tr > td {
+        vertical-align: middle;
+    }
 
 </style>
