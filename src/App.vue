@@ -8,9 +8,9 @@
     </div>
     <div class="content">
         <FormLoader :class="['tab-content', activetab != 1 ? 'hidden' : '']"></FormLoader>
-        <div style="float:left;">
-          <FilterTab  @apply="filterRules" :class="['tab-content', activetab != 2 ? 'hidden' : '']" :characteristics="characteristics" :attributes="attributes"></FilterTab>
-        </div>
+        <FilterTab  @apply="filterRules" @match="match" :class="['tab-content', activetab != 2 ? 'hidden' : '']" 
+                    :examples="examples" :characteristics="characteristics" :attributes="attributes">
+        </FilterTab>
         <TableTab  :class="['tab-content', activetab != 2 ? 'hidden' : '']" :rules="rules" :characteristics="characteristics"></TableTab>
         <div style="clear:both;"></div>
     </div>
@@ -28,16 +28,18 @@ export default {
       activetab: 1,
       rules: [],
       attributes: [],
-      characteristics: { }
+      characteristics: { },
+      examples: []
   }},
   methods: {
+    loadExamples(e) { this.examples = e; },
     load(a, r, c) {
         window.app = this;
         this.attributes = a;
         this.srcRules = r;
         this.rules = Object.assign([], [...this.srcRules]);
         this.characteristics = c;
-    }, filterRules
+    }, filterRules, match
   },
   components: {
     FormLoader, FilterTab, TableTab
@@ -82,6 +84,23 @@ function filterRule(input, data, rule) {
         var value = rule.characteristics[name];
         var range = data.characteristics[name].range;
         if (value < range[0] || value > range[1])
+            return false;
+    }
+    return true;
+}
+
+function match(evt, data) {
+    this.rules = Object.assign([], this.srcRules.filter(matchRule.bind(this, data.example)));
+}
+function matchRule(example, rule) {
+    for (var condition of rule.conditions) {
+        var value = example[condition.name].value;
+        if (value == undefined)
+            continue;
+        var op = condition.operator;
+        if (op == ">=" && value < condition.value)
+            return false;
+        if (op == "<=" && value > condition.value)
             return false;
     }
     return true;

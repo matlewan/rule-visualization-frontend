@@ -1,67 +1,76 @@
 <template>
     <div v-if="attributes.length > 0" style="float: left;">
-    <h5 v-if="decisions.length > 0">Decision</h5>
-    <div class="d-filter scrollbar">
-        <table class="table table-sm">
-            <tbody>
-                <tr v-for="value in decisions" :key="value.id">
-                    <td><label>{{ value.name }}</label></td>
-                    <td><select name="operator" v-model="dOperator" class="form-control-sm">
-                        <option value="">&isin;</option>
-                        <option value=">=">&ge;</option>
-                        <option value="<=">&le;</option>
-                    </select></td>
-                    <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="1" :tooltip-formatter="val => value.domain[val]"/></td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="tabs">
+        <a @click="activesubtab=1" :class="[ activesubtab === 1 ? 'active' : '' ]">Filter</a>
+        <a @click="activesubtab=2" :examples="examples" :class="[ activesubtab === 2 ? 'active' : '' ]">Match</a>
     </div>
-    <h5>Characteristics</h5>
-    <div class="c-filter scrollbar">
-        <table class="table table-sm">
-            <tbody>
-                <tr v-for="(value, name) in activeCharacteristics" :key="name">
-                    <td><label>{{ value.name }}</label></td>
-                    <td><input type="number" v-model="value.range[0]" :step="value.step" :min="0" :max="value.range[1]"></td>
-                    <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="value.step"/></td>
-                    <td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="Math.max(value.max, 1)"></td>
-                </tr>
-            </tbody>
-        </table>
+    <div v-if="activesubtab === 1">
+        <h5 v-if="decisions.length > 0">Decision</h5>
+        <div class="d-filter scrollbar">
+            <table class="table table-sm">
+                <tbody>
+                    <tr v-for="value in decisions" :key="value.id">
+                        <td><label>{{ value.name }}</label></td>
+                        <td><select name="operator" v-model="dOperator" class="form-control-sm">
+                            <option value="">&isin;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="<=">&le;</option>
+                        </select></td>
+                        <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="1" :tooltip-formatter="val => value.domain[val]"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <h5>Characteristics</h5>
+        <div class="c-filter scrollbar">
+            <table class="table table-sm">
+                <tbody>
+                    <tr v-for="(value, name) in activeCharacteristics" :key="name">
+                        <td><label>{{ value.name }}</label></td>
+                        <td><input type="number" v-model="value.range[0]" :step="value.step" :min="0" :max="value.range[1]"></td>
+                        <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="value.step"/></td>
+                        <td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="Math.max(value.max, 1)"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <h5>Attributes</h5>
+        <input @click="checkAll" type="checkbox" name="all" v-model="all"><label for="all">All</label>
+        <input type="radio" name="operator" value="OR" v-model="aOperator"><label>OR</label>
+        <input type="radio" name="operator" value="AND" v-model="aOperator"><label>AND</label>
+        <!-- <input class="form-control form-control-sm search" type="text" placeholder="search..." v-model="conditionLike"> -->
+        <div class="a-filter scrollbar">
+            <table class="table table-sm">
+                <tbody>
+                    <tr v-for="attribute in activeAttributes" :key="attribute.id">
+                        <td><input type="checkbox" v-model="attribute.filter" :id="attribute.name"></td>
+                        <td><label>{{ attribute.name }}</label></td>
+                        <td><img class="svg-cancel" src="svg/cancel.svg" @click="off(attribute.name)"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button @click="clear" class="btn btn-primary">Reset</button>
+        <button @click="emit" class="btn btn-success">Apply</button>
     </div>
-    <br>
-    <h5>Attributes</h5>
-    <input @click="checkAll" type="checkbox" name="all" v-model="all"><label for="all">All</label>
-    <input type="radio" name="operator" value="OR" v-model="aOperator"><label>OR</label>
-    <input type="radio" name="operator" value="AND" v-model="aOperator"><label>AND</label>
-    <!-- <input class="form-control form-control-sm search" type="text" placeholder="search..." v-model="conditionLike"> -->
-    <div class="a-filter scrollbar">
-        <table class="table table-sm">
-            <tbody>
-                <tr v-for="attribute in activeAttributes" :key="attribute.id">
-                    <td><input type="checkbox" v-model="attribute.filter" :id="attribute.name"></td>
-                    <td><label>{{ attribute.name }}</label></td>
-                    <td><img class="svg-cancel" src="svg/cancel.svg" @click="off(attribute.name)"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <button @click="clear" class="btn btn-primary">Reset</button>
-    <button @click="emit" class="btn btn-success">Apply</button>
+    <Examples v-if="activesubtab === 2" :attributes="attributes" :examples="examples" @match="emit"></Examples>
     </div>
 </template>
 
 <script>
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
+import Examples from  "../components/Examples.vue";
 
 export default {
   name: "FilterTab",
   props: {
       characteristics: Object,
-      attributes: Array
+      attributes: Array,
+      examples: Array
   },
   data() { return {
+      activesubtab: 1,
       conditionLike: '',
       all: false,
       aOperator: "OR",
@@ -84,7 +93,7 @@ export default {
     }
   },
   components: {
-      VueSlider
+      VueSlider, Examples
   },
   methods: {
       clear, checkAll, off, emit
@@ -150,7 +159,7 @@ function off(name) {
         margin-bottom: 5px;
         max-height: 30vh;
         overflow: auto;
-        max-width: 400px;
+        max-width: 380px;
     }
     .c-filter label {
         max-width: 150px;
@@ -178,7 +187,6 @@ function off(name) {
         border: 0;
         text-align: right;
     }
-
     
     .table-sm td {
         padding: 0.1rem;
