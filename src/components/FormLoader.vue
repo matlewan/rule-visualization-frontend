@@ -31,8 +31,8 @@
         <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Characteristics</a>
       </div>
       <div class="content" v-if="attributes.length > 0">
-        <Attributes :class="['tab-content', activetab != 1 ? 'hidden' : '']" :attributes="attributes"></Attributes>
-        <Characteristics  :class="['tab-content', activetab != 2 ? 'hidden' : '']" :characteristics="characteristics"></Characteristics>
+        <Attributes class='tab-content' v-show="activetab==1" :attributes="attributes"></Attributes>
+        <Characteristics  class='tab-content' v-show="activetab==2" :characteristics="characteristics"></Characteristics>
       </div>
   </div>
 </template>
@@ -62,44 +62,45 @@ export default {
 var tmp_filename;
 
 function loadAttributes(component, data) {
-    for (var i = 0; i < data.length; i++) {
-      data[i].id = i+1;
-      data[i].srcName = data[i].name;
-      data[i].active = data[i].name == "ID" ? false : data[i].active;
-      data[i].filter = false;
-      data[i].dispFilter = data[i].active;
-      if (data[i].type == 'decision') {
-          var last = data[i].domain.length-1;
-          data[i].min = 0 // data[i].domain[0];
-          data[i].max = last // data[i].domain[last]
-          Vue.set(data[i], 'range', [data[i].min, data[i].max])
-      }
+    for ( var [i, attr] of data.entries()) {
+      attr.id = i+1;
+      attr.srcName = attr.name;
+	  attr.example = attr.active;
+	  attr.active = attr.name == "ID" ? false : attr.active;
+	  attr.dispFilter = attr.active;
+	  attr.min = 0;
+	  attr.max = (attr.domain == undefined) ? 100 : attr.domain.length-1;
+	  Vue.set(attr, 'filter', {
+		  include: undefined,
+		  op: '',
+		  range: attr.preferenceType != 'none' ? [attr.min, attr.max] : []
+	  });
     }
     component.attributes = data;
     component.attributes.sort((a, b) => a.active > b.active || a.active == b.active && a.name < b.name ? -1 : 1);
 }
 
 function loadExamples(component, data) {
+	for (var i = 0; i < data.length; i++) {
+		data[i]['idx'] = i+1;
+	}
     for (var attribute of component.attributes) {
-        var f = undefined;
+		var f = undefined;
         if (attribute.valueType == 'enumeration')
-            f = function(idx, y) { var x = y.toString(); return {value: attribute.domain.indexOf(x), desc: x}};
-        else if (attribute.srcName == 'ID') 
-            f = function(idx, x) { 
-              return {value: x, desc: idx}
-            };
-        else if (attribute.valueType == 'integer')
-            f = function(idx, x) { return {value: parseFloat(x), desc: x}};
-        else if (attribute.valueType == 'real')
-            f = function(idx, x) { return {value: parseFloat(x), desc: (x*1).toFixed(3)}};
-
+            f = function(x) { return attribute.domain.indexOf(x.toString()); };
+		else if (attribute.valueType == 'real')
+			f = function(x) { return parseFloat(x); };
+		else if (attribute.valueType == 'integer')
+			f = function(x) { return parseInt(x); };
+		else
+			f = function(x) { return x; };
+		
         for (var i = 0; i < data.length; i++) {
-            var example = data[i];
-            var value = example[attribute.srcName];
+            var value = data[i][attribute.srcName];
             if (value == undefined) continue;
-            example[attribute.srcName] = f(i+1, example[attribute.srcName]);
-        }
-    }
+            data[i][attribute.srcName] = f(value);
+		}
+	}
     Object.assign(component.examples, [], data);
     component.$parent.loadExamples(data);
 }
@@ -200,7 +201,7 @@ function loadDemo() {
 }
 
 function loadCharacteristics(component) {
-  var unknown = 'UNKNOWN'; // must be the same identifier as in the rules XML file
+  var unknown = 'undefined'; // must be the same identifier as in the rules.json file returned from server
   for (var rule of component.rules) {
       for ( var name in rule.characteristics) {
           var value = rule.characteristics[name];

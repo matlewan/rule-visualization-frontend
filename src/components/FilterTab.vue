@@ -1,60 +1,62 @@
 <template>
-    <div v-if="attributes.length > 0" style="float: left;">
-    <div class="tabs">
-        <a @click="activesubtab=1" :class="[ activesubtab === 1 ? 'active' : '' ]">Filter</a>
-        <a @click="activesubtab=2" :examples="examples" :class="[ activesubtab === 2 ? 'active' : '' ]">Match</a>
-    </div>
-    <div v-if="activesubtab === 1">
-        <h5 v-if="decisions.length > 0">Decision</h5>
-        <div class="d-filter scrollbar">
-            <table class="table table-sm">
-                <tbody>
-                    <tr v-for="value in decisions" :key="value.id">
-                        <td><label>{{ value.name }}</label></td>
-                        <td><select name="operator" v-model="dOperator" class="form-control-sm">
-                            <option value="">&isin;</option>
-                            <option value=">=">&ge;</option>
-                            <option value="<=">&le;</option>
-                        </select></td>
-                        <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="1" :tooltip-formatter="val => value.domain[val]"/></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <h5>Characteristics</h5>
-        <div class="c-filter scrollbar">
-            <table class="table table-sm">
-                <tbody>
-                    <tr v-for="(value, name) in activeCharacteristics" :key="name">
-                        <td><label>{{ value.name }}</label></td>
-                        <td><input type="number" v-model="value.range[0]" :step="value.step" :min="0" :max="value.range[1]"></td>
-                        <td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="value.step"/></td>
-                        <td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="Math.max(value.max, 1)"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <h5>Attributes</h5>
-        <input @click="checkAll" type="checkbox" name="all" v-model="all"><label for="all">All</label>
-        <input type="radio" name="operator" value="OR" v-model="aOperator"><label>OR</label>
-        <input type="radio" name="operator" value="AND" v-model="aOperator"><label>AND</label>
-        <!-- <input class="form-control form-control-sm search" type="text" placeholder="search..." v-model="conditionLike"> -->
-        <div class="a-filter scrollbar">
-            <table class="table table-sm">
-                <tbody>
-                    <tr v-for="attribute in activeAttributes" :key="attribute.id">
-                        <td><input type="checkbox" v-model="attribute.filter" :id="attribute.name"></td>
-                        <td><label>{{ attribute.name }}</label></td>
-                        <td><img class="svg-cancel" src="svg/cancel.svg" @click="off(attribute.name)"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <button @click="clear" class="btn btn-primary">Reset</button>
-        <button @click="emit" class="btn btn-success">Apply</button>
-    </div>
-    <Examples v-if="activesubtab === 2" :attributes="attributes" :examples="examples" @match="emit"></Examples>
-    </div>
+<div v-if="attributes.length > 0" style="float: left;">
+<div class="tabs">
+	<a @click="activesubtab=1" :class="{'active': activesubtab === 1, 'status-active': status.filter}">Filter</a>
+	<a @click="activesubtab=2" :class="{'active': activesubtab === 2, 'status-active': status.match}">Match</a>
+</div>
+<div class='tab-content' v-show="activesubtab==1">
+	<h5>Characteristics</h5>
+	<div class="c-filter scrollbar">
+		<table class="table table-sm">
+			<tbody>
+				<tr v-for="(value, name) in activeCharacteristics" :key="name">
+					<td><label>{{ value.name }}</label></td>
+					<td><input type="number" v-model="value.range[0]" :step="value.step" :min="0" :max="value.range[1]"></td>
+					<td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="value.step"/></td>
+					<td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="Math.max(value.max, 1)"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<h5>Attributes</h5>
+	<input @click="checkAll" type="checkbox" name="all" id="all"><label for="all">All</label>
+	<label style="margin: 0 10px 0 20px;" for="aOperator">Join operator: </label>
+	<select class="form-control-sm" v-model="aOperator" name="aOperator">
+		<option value="OR">or</option>
+		<option value="AND">and</option>
+	</select>
+	<div class="a-filter scrollbar">
+		<table class="table table-sm">
+		<tbody>
+			<tr v-for="attribute in activeAttributes" :key="attribute.id">
+				<td><input type="checkbox" @click="checkOne($event.target, attribute)"></td>
+				<td class="attrName"> <div>{{ attribute.name }} </div></td>
+				<template v-if="attribute.preferenceType == 'none'">
+					<td class="selected"> {{ selected(attribute) }} </td>
+					<td>
+						<select v-model="attribute.filter.range" multiple>
+							<option class='opt' v-for="(value, index) in attribute.domain" :value="index" :key="value.id">{{ value }}</option>
+						</select>
+					</td>
+				</template>
+				<template v-else>
+					<td><select v-model="attribute.filter.op" class="form-control-sm">
+						<option value="">&isin;</option>
+						<option value=">=">&ge;</option>
+						<option value="<=">&le;</option>
+					</select></td>
+					<td><vue-slider class="slider" v-model="attribute.filter.range" :max="Math.max(attribute.max, 1)" :min="0" :interval="1" 
+						:tooltip-formatter="attribute.domain != undefined ? val => attribute.domain[val] : undefined"/></td>
+				</template>
+			</tr>
+		</tbody>
+		</table>
+	</div>
+	<button @click="reset" class="btn btn-primary">Reset</button>
+	<button @click="apply" class="btn btn-success">Apply</button>
+</div>
+<Examples class='tab-content' v-show="activesubtab==2" :attributes="attributes" :srcExamples="srcExamples" :examples="examples" :ruleId="ruleId"></Examples>
+</div>
 </template>
 
 <script>
@@ -67,14 +69,15 @@ export default {
   props: {
       characteristics: Object,
       attributes: Array,
-      examples: Array
+	  srcExamples: Array,
+	  examples: Array,
+	  ruleId: Number,
+	  status: Object
   },
   data() { return {
-      activesubtab: 1,
-      conditionLike: '',
-      all: false,
-      aOperator: "OR",
-      dOperator: ""
+		activesubtab: 1,
+		all: undefined,
+		aOperator: "OR"
   }},
   computed: {
     activeCharacteristics: function() {
@@ -86,130 +89,98 @@ export default {
                 }, {});
         },
     activeAttributes: function() {
-          return this.attributes.filter(a => a.dispFilter && a.type == 'condition');
-        },
-    decisions: function() {
-        return this.attributes.filter(a => a.dispFilter && a.type == 'decision')
-    }
+          return this.attributes.filter(a => a.dispFilter).sort( (a,b) => (a.type > b.type) ? -1 : (a.name < b.name) ? -1 : 1 );
+        }
   },
   components: {
       VueSlider, Examples
   },
   methods: {
-      clear, checkAll, off, emit
+      apply, reset, resetCheckboxes, check, checkOne, checkAll, attr, selected
   }
 };
 
-function emit() {
-    var data = {
-        aOperator: this.aOperator,
-        dOperator: this.dOperator
-    };
+function selected(attribute) {
+	var elems = attribute.filter.range.map(v => attribute.domain[v]);
+	if (elems.length == 0) return 'all';
+	var x = elems.join(', ');
+	return (x.length <= 20) ? x : '(' + elems.length + ') ' + x.substr(0, 15) + '...';
+}
+
+function apply() {
+    var data = { aOperator: this.aOperator };
     this.$emit('apply', this.$event, data);
 }
 
-function clear() {
-    this.all = false;
-    for (var i = 0; i < this.attributes.length; i++) {
-        this.attributes[i].filter = false;
-    }
-    for (var elem of document.querySelectorAll('.a-filter input[type="checkbox"')) {
-        elem.indeterminate = false;
-    }
+function attr(name) { return this.attributes.filter(a => a.name == name)[0]; }
+
+function reset() {
     for (var name in this.characteristics) {
-        var c = this.characteristics[name];
-        Vue.set(c.range, 0, c.min);
-        Vue.set(c.range, 1, c.max);
+		var c = this.characteristics[name];
+		Vue.set(c, 'range', [c.min, c.max]);
     }
-    this.dOperator = '';
-    for (var decision of this.decisions) {
-        Vue.set(decision.range, 0, 0);
-        Vue.set(decision.range, 1, decision.max);
-    }
+    for (var a of this.activeAttributes) {
+		Vue.set(a.filter, 'op', ''); 
+		Vue.set(a.filter, 'range', a.preferenceType != 'none' ? [a.min, a.max] : []); 
+	}
+	this.resetCheckboxes();
+    this.apply();
 }
+function resetCheckboxes() { this.all = false; this.checkAll(); }
 
+function check(elem, value) {
+	var cycle = [undefined, true, false];
+	var index = cycle.indexOf(value);
+	var newValue = cycle[(index+1) % cycle.length];
+	elem.indeterminate = (newValue == false);
+	elem.checked = (newValue == true);
+	return newValue;
+}
+function checkOne(elem, attribute) { attribute.filter.include = this.check(elem, attribute.filter.include); }
 function checkAll() {
-    for (var i = 0; i < this.attributes.length; i++) {
-        this.attributes[i].filter = !this.all;
+	var elem = document.getElementById('all');
+	this.all = this.check(elem, this.all);
+	
+	for (var a of this.attributes) { a.filter.include = this.all; }
+    for (var elemA of document.querySelectorAll('.a-filter input[type="checkbox"')) {
+		elemA.indeterminate = elem.indeterminate;
+		elemA.checked = elem.checked;
     }
-    for (var elem of document.querySelectorAll('.a-filter input[type="checkbox"')) {
-        elem.indeterminate = false;
-    }
-}
-
-function off(name) {
-    this.attributes.filter(a => a.name == name)[0].filter = undefined;
-    document.getElementById(name).indeterminate = true;
 }
 
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    input[type="radio"] {
-        margin-left: 20px;
-    }
-
-    table thead th {
-        border: 0;
-    }
+	/* Main elements sizes */
+	.a-filter { max-height: calc(100vh - 450px); }
+	.c-filter { max-height: 250px; }
     .a-filter,.c-filter {
         flex-grow: 0;
         margin-right: 10px;
         margin-bottom: 5px;
-        max-height: 30vh;
         overflow: auto;
-        max-width: 380px;
+        width: 360px;
     }
-    .c-filter label {
-        max-width: 150px;
-    }
-    .c-filter input,.vue-slider {
-        position: relative;
-        background-color: white;
-    }
+	.attrName div { width: 150px; overflow-x: hidden; margin: 0; } /* Sets max width of attributes' names */
+	.attrName { width: 160px; } /* Wrapper for above (width >= width of .attrName div)
+    .c-filter label { max-width: 150px; } /* Sets max width of characteristics' names */
 
-    .btn {
-        margin-right: 10px;
-    }
-    .vue-slider {
-        min-width: 80px;
-        max-width: 80px;
-        float: left;
-    }
-    .search {
-        margin-bottom: 5px;
-        width: calc(100% - 15px);
-    }
-    input[type="number"] {
-        width: 60px;
-        float: left;
-        border: 0;
-        text-align: right;
-    }
+
+    .c-filter input,.vue-slider { position: relative; background-color: white; }
+    .vue-slider { min-width: 80px; max-width: 80px; float: left; }
+	input[type="number"] { width: 60px; float: left; border: 0; text-align: right; } /* vue-slider helpers */
     
-    .table-sm td {
-        padding: 0.1rem;
-    }
-
-    .table {
-        margin-bottom: 0;
-    }
+    .table-sm td { padding: 0.1rem; }
+    .table { margin-bottom: 0; } 
+	td label { margin-top: 0.2rem; margin-bottom: 0.2rem; }
 
 
-    td label {
-        margin-top: 0.2rem;
-        margin-bottom: 0.2rem;
-    }
+	select[multiple] { max-height: 2rem; width: 80px; }
+	.selected { max-width: 45px; word-break: break-all; } /* element presenting selected options in multiple select */
+    .form-control-sm { height: calc(1rem + 10px); padding: 0; }  /* used by select tag */
+	.opt { padding: 0 5px; text-align: center; } /* used by option tag */
 
-    .svg-cancel {
-        height: 80%;
-    }
-
-    .form-control-sm {
-        height: calc(1rem + 10px);
-        padding: 0;
-    }
-    
-  
+	.status-active { background-color: #fff0f0 !important;  color: #aa0000 !important; }
+    .btn { margin-right: 10px; }
 </style>

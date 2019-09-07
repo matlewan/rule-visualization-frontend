@@ -8,7 +8,7 @@
                     <th>Max</th>
                     <th>Active</th>
                     <th>Filter</th>
-                    <th>Display</th>
+                    <th>Table</th>
                 </tr>
             </thead>
             <tbody>

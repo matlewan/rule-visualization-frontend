@@ -3,19 +3,19 @@
         <table class="table table-sm">
             <thead>
                 <tr>
-                    <th @click="sort('id')">ID</th>
-                    <th @click="sort('conditions')">Conditions</th>
-                    <th @click="sort('decision')">Decision</th>
-                    <th v-for="(value, name) in dispCharacteristics" :key="value.id" @click="sort(name)">{{ value.name }} </th>
+                    <th @click="sort('id', $event.target, 'asc')">ID<span /></th>
+                    <th @click="sort('conditions', $event.target, 'asc')">Conditions<span /></th>
+                    <th @click="sort('decision', $event.target, 'asc')">Decision<span /></th>
+                    <th v-for="(value, name) in dispCharacteristics" :key="value.id" @click="sort(name, $event.target, 'desc')">{{ value.name }}<span /></th>
                 </tr>
             </thead>
             <tbody>
                 <!-- <RuleRow v-for="rule of rules" v-bind:rule="rule" v-bind:key="rule.id"></RuleRow> -->
                 <tr v-for="rule of dispRules" :key="rule.id">
                     <td>{{ rule.id }}</td>
-                    <td v-html="conditionsToString(rule.conditions)"></td>
+                    <td @click="setRule(rule.id)" class="condition" v-html="conditionsToString(rule.conditions)"></td>
                     <td v-html="decisionsToString(rule.decisions)"></td>
-                    <td class="value" v-for="(value, name) in dispCharacteristics" :key="value.id">{{ round(rule.characteristics[name], 3) }}</td>
+                    <td class="text-right" v-for="(value, name) in dispCharacteristics" :key="value.id">{{ round(rule.characteristics[name], 3) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -62,7 +62,7 @@ export default {
       VueSlider
   },
   methods: {
-      conditionsToString, decisionsToString, round, sort
+      conditionsToString, decisionsToString, round, sort, setRule
   } 
 };
 
@@ -82,6 +82,7 @@ function conditionsToString(conditions) {
 }
 
 function decisionsToString(decisions) {
+	var x = 2;
     var decision = decisions[0][0];
     return decision.name + " " + operator(decision.operator) + " " 
                 + "<span class=\"rule-value\">" + decision.description + "</span>";
@@ -92,62 +93,56 @@ function round(num, precision) {
     return Math.round(num * x) / x;
 }
 
-function sort(name) {
+function setRule(id) {
+	this.$emit('setRule', this.$event, id);
+}
+
+function sort(name, elem, default_dir) {
     if (this.orderby == name)
         this.orderby_dir = this.orderby_dir == 'asc' ? 'desc' : 'asc';
     else
-        this.orderby_dir = 'asc';
-    this.orderby = name;
+        this.orderby_dir = default_dir;
+	this.orderby = name;
+	
+	var elems = document.querySelectorAll('.rule-table th');
+	for (var e of elems) { e.classList.remove('asc', 'desc'); }
+	if (name != 'id') elem.classList.add(this.orderby_dir);
 }
 
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    .rule-table {
-        height: 90vh;
-        max-width: calc(100vw - 480px);
-        overflow: auto;
-        white-space: pre;
-        flex-grow: 1;
-        float: left;
-        /* margin-top: -30px; */
-    }
+.rule-table {
+	max-height: calc(100vh - 50px);
+	max-width: calc(100vw - 440px); /* check c-filter and a-filter classes */
+	overflow: auto;
+	white-space: pre;
+	flex-grow: 1;
+	float: left;
+}
 
-    table {
-        margin: 0;
-    }
+table { margin: 0; }
+table thead th {
+	/* Freeze */ position: sticky; top: 0; background-color: white; border: 0;
+	/* Link style */ cursor: pointer; text-decoration: underline;
+}
 
-    table thead th {
-        position: sticky;
-        top: 0;
-        background-color: white;
-        border: 0;
-        cursor: pointer;
-        text-decoration: underline;
-    }
+/* Sort CSS */ 
+.asc span::before { content: '▲'; } .desc span::before { content: '▼'; }
 
-    .table-sm td,th {
-        padding: 5px 10px !important;
-    }
+/* Freeze 2 first columns of table */
+.table-sm td:first-child { min-width: 35px; max-width: 35px; }
+table tr td:first-child,th:first-child { position: sticky; left: 0; }
+table tr th:nth-child(2),td:nth-child(2) { position: sticky; left: 35px; }
+table tr th:first-child,th:nth-child(2) { z-index: 1; }
 
-    table tr:nth-child(even) td {
-        background-color: white;
-    }
-    table tr:nth-child(odd) td {
-        background-color: #f0f0f0;
-    }
-
-    table tr td:first-child,th:first-child {
-        position: sticky;
-        left: 0;
-    }
-    table tr th:first-child {
-        z-index: 1;
-    }
-
-    .value {
-        text-align: right;
-    }
+/* Styling table body */
+table tr:nth-child(even) td { background-color: white; }
+table tr:nth-child(odd) td { background-color: #f0f0f0; }
+.table-sm td:first-child { text-align: center; padding: 0 !important; }
+.table-sm td,th { padding: 5px 10px !important; }
+/* .rule-value ----> Not working, but working when moved to App.vue, probably bug. */ 
+.condition { cursor: pointer; }
     
 </style>

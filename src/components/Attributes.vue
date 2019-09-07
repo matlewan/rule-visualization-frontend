@@ -12,6 +12,7 @@
                     <th>Type / Domain</th>
                     <th>Active</th>
                     <th>Filter</th>
+					<th>Example</th>
                     <!-- <th>Display</th> -->
                 </tr>
             </thead>
@@ -26,6 +27,7 @@
                     <td>{{ attribute.domain != undefined ? attribute.domain.join(', ') : attribute.valueType }}</td>
                     <td><input type="checkbox" v-model="attribute.active" disabled=true></td>
                     <td><input type="checkbox" v-model="attribute.dispFilter"></td>
+                    <td><input type="checkbox" v-model="attribute.example"></td>
                     <!-- <td><input type="checkbox" v-model="attribute.display"></td> -->
                 </tr>
             </tbody>
