@@ -12,13 +12,13 @@
                     <th>Value type / domain</th>
                     <th>Active</th>
                     <th>Filter</th>
-					<th>Example</th>
+					<!-- <th>Example</th> -->
                     <!-- <th>Display</th> -->
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="attribute of attributes" :key="attribute.id">
-                    <td><input class="rounded-input" v-model="attribute.name"></td>
+                    <td><input class="rounded-input" v-model="attribute.dispName"></td>
                     <!-- <td>{{ atribute.min }}</td>
                     <td>{{ attribute.max }}</td> -->
                     <!-- <td>{{ attribute.type }}</td> -->
@@ -27,7 +27,7 @@
                     <td>{{ attribute.identifierType != undefined ? attribute.identifierType : attribute.domain != undefined ? attribute.domain.join(', ') : attribute.valueType }}</td>
                     <td><input type="checkbox" v-model="attribute.active" disabled=true></td>
                     <td><input type="checkbox" v-model="attribute.dispFilter"></td>
-                    <td><input type="checkbox" v-model="attribute.example"></td>
+                    <!-- <td><input type="checkbox" v-model="attribute.example"></td> -->
                     <!-- <td><input type="checkbox" v-model="attribute.display"></td> -->
                 </tr>
             </tbody>

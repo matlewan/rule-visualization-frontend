@@ -22,12 +22,12 @@
     <div class="example scrollbar">
         <table class="table table-sm">
             <tbody>
-                <tr v-for="(value, name) in example" :key="name" v-show="['idx', 'rules'].indexOf(name) < 0">
+                <tr v-for="(value, name) in example" :key="name" v-show="attr(name).valueType != undefined">
 					<template v-if="attr(name).active">
 					<td><label>{{ name }}</label></td>
                     <td>
-                        <input type="text" name="ID" v-if="attr(name).valueType == undefined" v-model="example[name]" readonly>
-                        <input type="number" v-else-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
+                        <!-- <input type="text" name="ID" v-if="attr(name).valueType == undefined" v-model="example[name]" readonly> -->
+                        <input type="number" v-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
                         <select v-else v-model="example[name]" class="form-control-sm" @change="edit(idx)">
                             <option v-for="elem in attr(name).domain" :value="elem" :key="elem">
                                 {{ elem }}

@@ -30,7 +30,7 @@
 		<tbody>
 			<tr v-for="attribute in activeAttributes" :key="attribute.id">
 				<td><input type="checkbox" @click="checkOne($event.target, attribute)"></td>
-				<td class="attrName"> <div>{{ attribute.name }} </div></td>
+				<td class="attrName"> <div>{{ attribute.dispName }} </div></td>
 				<template v-if="attribute.preferenceType == 'none'">
 					<td class="selected"> {{ selected(attribute) }} </td>
 					<td>
@@ -168,7 +168,7 @@ function checkAll() {
 
 
     .c-filter input,.vue-slider { position: relative; background-color: white; }
-    .vue-slider { min-width: 80px; max-width: 80px; float: left; }
+    .vue-slider { min-width: 80px; max-width: 80px; float: left;}
 	input[type="number"] { width: 60px; float: left; border: 0; text-align: right; } /* vue-slider helpers */
     
     .table-sm td { padding: 0.1rem; }

@@ -50,10 +50,6 @@ export default {
 	data() {
 		return {
 			loadMsg: "",
-			rules: [],
-			attributes: [],
-			characteristics: {},
-			examples: [],
 			activetab: 1,
 			files: {}
 		};
@@ -64,19 +60,22 @@ export default {
 	},
 	components: { Attributes, Characteristics },
 	computed: {
+		attributes: function() { return this.$parent.attributes; },
+		characteristics: function() { return this.$parent.characteristics; },
+		examples: function() { return this.$parent.srcExamples; },
 		dirtyExamples: function() {
-			return this.$parent.examples.length > 0;
+			return this.$parent.srcExamples.length > 0;
 		}
 	}
 };
 var tmp_filename;
 function getAPI() { return 'http://localhost:8081/upload' }
 
-function download(href, download) {
+function download(href, filename) {
 	var a = document.getElementById("download");
 	a.href = href;
 	a.target = "_self";
-	a.download = download;
+	a.download = filename;
 	a.click();
 }
 function downloadDemo() { download('./data/data.zip', 'data.zip'); }
@@ -91,15 +90,6 @@ function getExamplesBlob() {
 	};
 	var data = JSON.stringify(this.$parent.srcExamples, replacer, 2);
 	return new Blob([data], { type: "text/json" });
-}
-
-function receive(data) {
-	if (data.status == 404) {
-		throw "Server API not found (HTTP 404) on " + data.url;
-	} else if (data.status != 200) {
-		throw "HTTP " + data.status + ": " + data.statusText + " (" + data.url + ")";
-	}
-	return data.json();
 }
 
 function browseAttributes() { document.getElementById("attributes").click(); }
@@ -119,25 +109,47 @@ function setExamples() {
 	document.getElementById("examplesText").value = file.name;
 }
 
+function receive(data) {
+	if (data.status == 404) {
+		throw "Server API not found (HTTP 404) on " + data.url;
+	} else if (data.status != 200) {
+		throw "HTTP " + data.status + ": " + data.statusText + " (" + data.url + ")";
+	}
+	return data.json();
+}
+
 function update() {
 	var component = this;
-	var formData = new FormData();
-	formData.append("attributes", this.files.attributes);
-	formData.append("rules", this.files.rules);
-	formData.append("examples", this.getExamplesBlob());
+	var files = {
+		attributes: this.files.attributes,
+		rules: this.files.rules,
+		examples: this.getExamplesBlob()
+	};
+	this.submit(files).then(function(data) {
+		loadMatching(component.$parent.srcExamples, data.examples);
+		var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
+		component.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
+		component.files = files;
+	}).catch(function(msg) {
+		component.loadMsg = msg;
+	});
+}
 
-	fetch(getAPI(), { method: "POST", body: formData })
-		.then(response => receive(response))
-		.then(function(data) {
-			var examples = component.$parent.srcExamples;
-			for (var i = 0; i < examples.length; i++)
-				Vue.set(examples[i], 'rules', data.examples[i].rules);
-			var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
-			component.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
-		})
-		.catch(function(msg) {
-			component.loadMsg = msg;
-		});
+function loadDemo() {
+	var load = this.load;
+	tmp_filename = undefined;
+	var getFile = function(url) {
+		return fetch(url, { method: "GET" })
+		.then(response => response.blob()) 
+	}
+	var getFiles = function() { return Promise.all([ // waits for all fetches from server
+		getFile("/data/attributes.json"), 
+		getFile("/data/rules.xml"), 
+		getFile("/data/examples.json")
+	]); };
+	getFiles().then( ([a, r, e]) => {
+		load({attributes: a, rules: r, examples: e});
+	});
 }
 
 function load(files) { // Performs asynchronous operations (read JSON, fetch) and then run preprocessing
@@ -178,19 +190,40 @@ function submit(files) {
 }	
 
 function preprocessing(attributes, examples, rules, matchings) {
-	loadAttributes(this, attributes);
-	loadExamples(this, examples);
-	loadRules(this, rules);
-	loadMatching(this, matchings);
+	loadAttributes(attributes);
+	loadExamples(examples);
+	loadMatching(examples, matchings); // should be after loadExamples
+	loadRules(rules);
+	var characteristics = {};
+	loadCharacteristics(characteristics, rules); // should be after loadRules
+
+	this.$parent.load(attributes, rules, characteristics, examples);
+	var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
+	this.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
 }
 
-function loadAttributes(component, data) {
+function loadExamples(data) {
+	for (var i = 0; i < data.length; i++) {
+		data[i]["idx"] = i + 1;
+	}
+}
+function loadMatching(examples, pairs) {
+	for (var i = 0; i < examples.length; i++) {
+		examples[i].rules = pairs[i].rules;
+	}
+}
+function loadRules(data) {
+	for (var i = 0; i < data.length; i++) {
+		data[i].id = i + 1;
+	}
+}
+
+function loadAttributes(data) {
 	for (var [i, attr] of data.entries()) {
 		attr.id = i + 1;
-		attr.srcName = attr.name;
+		attr.dispName = attr.name;
 		attr.example = attr.active;
-		attr.active = attr.name == "ID" ? false : attr.active;
-		attr.dispFilter = attr.active;
+		attr.dispFilter = attr.active && attr.valueType != undefined;
 		attr.min = 0;
 		attr.max = attr.domain == undefined ? 100 : attr.domain.length - 1;
 		Vue.set(attr, "filter", {
@@ -199,57 +232,28 @@ function loadAttributes(component, data) {
 			range: attr.preferenceType != "none" ? [attr.min, attr.max] : []
 		});
 	}
-	component.attributes = data;
-	component.attributes.sort((a, b) => a.active > b.active || (a.active == b.active && a.name < b.name) ? -1 : 1 );
+	data.sort((a, b) => a.active > b.active || (a.active == b.active && a.name < b.name) ? -1 : 1 );
 }
 
-function loadExamples(component, data) {
-	for (var i = 0; i < data.length; i++) {
-		data[i]["idx"] = i + 1;
-	}
-	Object.assign(component.examples, [], data);
-	component.$parent.loadExamples(data);
-}
-
-function loadRules(component, data) {
-	for (var i = 0; i < data.length; i++) {
-		data[i].id = i + 1;
-	}
-	component.rules = data;
-	var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
-	component.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
-	loadCharacteristics(component);
-	component.$parent.load( component.attributes, component.rules, component.characteristics );
-}
-
-function loadMatching(examples, pairs) {
-	for (var i = 0; i < examples.length; i++) {
-		examples[i].rules = pairs[i].rules;
-	}
-}
-
-function loadCharacteristics(component) {
+function loadCharacteristics(characteristics, rules) {
 	var unknown = "undefined"; // must be the same identifier as in the rules.json file returned from server
-	for (var rule of component.rules) {
+	for (var rule of rules) {
 		for (var name in rule.characteristics) {
 			var value = rule.characteristics[name];
 			if (value == unknown) continue;
-			else if (component.characteristics[name] == undefined) {
-				component.characteristics[name] = { range: [value, value] };
+			else if (characteristics[name] == undefined) {
+				characteristics[name] = { range: [value, value] };
 			} else {
-				var range = component.characteristics[name].range;
+				var range = characteristics[name].range;
 				range[0] = Math.min(range[0], value);
 				range[1] = Math.max(range[1], value);
 			}
 		}
 	}
-	var i = 1;
-	for (name in component.characteristics) {
-		var c = component.characteristics[name];
+	for (name in characteristics) {
+		var c = characteristics[name];
 		c.name = name;
 		c.active = c.range[0] != c.range[1];
-		c.id = i;
-		i += 1;
 		c.filter = c.active;
 		c.display = c.active;
 		c.range[0] = Math.floor(c.range[0] * 1000) / 1000;
@@ -258,24 +262,6 @@ function loadCharacteristics(component) {
 		c.max = c.range[1];
 		c.step = c.max > 1 ? 1 : 0.01;
 	}
-	component.characteristics = Object.assign( {}, component.characteristics, {} );
-}
-
-function loadDemo() {
-	var load = this.load;
-	tmp_filename = undefined;
-	var getFile = function(url) {
-		return fetch(url, { method: "GET" })
-		.then(response => response.blob()) 
-	}
-	var getFiles = function() { return Promise.all([ // waits for all fetches from server
-		getFile("/data/attributes.json"), 
-		getFile("/data/rules.xml"), 
-		getFile("/data/examples.json")
-	]); };
-	getFiles().then( ([a, r, e]) => {
-		load({attributes: a, rules: r, examples: e});
-	});
 }
 </script>
 

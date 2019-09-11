@@ -41,13 +41,13 @@ export default {
 	  ruleId: undefined
   }},
   methods: {
-    loadExamples(e) { this.srcExamples = e; },
-    load(a, r, c) {
+    load(a, r, c, e) {
         window.app = this;
         this.attributes = a;
         this.srcRules = r;
 		this.rules = this.filteredRules = Object.assign([], [...this.srcRules]);
 		this.characteristics = c;
+		this.srcExamples = e;
     }, filterRules, filterRule, match, setRule, matchRule
   },
   components: {
@@ -77,7 +77,7 @@ function filterRules(evt, input) {
 		var range = a.filter.range;
 		if (a.filter.op != '' || (a.preferenceType == 'none' && range.length > 0) || 
 		   (a.preferenceType != 'none' && (range[0] > a.min || range[1] < a.max))) {
-			   filter.attributes[a.srcName] = a;
+			   filter.attributes[a.name] = a;
 		}
 	}
 	filter.join = input.aOperator;
@@ -108,7 +108,7 @@ function filterRule(rule, filter) {
 	// Filter include
 	var count = filter.attributesIn.length;
 	for (var attr of filter.attributesIn) {
-		if (attributes.find(a => a.name == attr.srcName) == undefined)
+		if (attributes.find(a => a.name == attr.name) == undefined)
 			count -= 1;
 	}
 	if (filter.join == 'AND' && count < filter.attributesIn.length) return false;
@@ -116,7 +116,7 @@ function filterRule(rule, filter) {
 
 	// Filter exclude
 	for (var a of attributes) {
-		if (filter.attributesOut.find(attr => attr.srcName == a.name) != undefined) return false;
+		if (filter.attributesOut.find(attr => attr.name == a.name) != undefined) return false;
 	}
 	
 	// Filter characteristics
