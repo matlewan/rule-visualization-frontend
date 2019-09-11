@@ -7,9 +7,9 @@
                     <!-- <th>Min</th>
                     <th>Max</th> -->
                     <!-- <th>Type</th> -->
-                    <th>G/C</th>
+                    <th>Type</th>
                     <!-- <th>Value</th> -->
-                    <th>Type / Domain</th>
+                    <th>Value type / domain</th>
                     <th>Active</th>
                     <th>Filter</th>
 					<th>Example</th>
@@ -22,9 +22,9 @@
                     <!-- <td>{{ atribute.min }}</td>
                     <td>{{ attribute.max }}</td> -->
                     <!-- <td>{{ attribute.type }}</td> -->
-                    <td>{{ attribute.preferenceType }}</td>
+                    <td>{{ attribute.identifierType != undefined ? "id" : attribute.preferenceType }}</td>
                     <!-- <td>{{ attribute.valueType }}</td> -->
-                    <td>{{ attribute.domain != undefined ? attribute.domain.join(', ') : attribute.valueType }}</td>
+                    <td>{{ attribute.identifierType != undefined ? attribute.identifierType : attribute.domain != undefined ? attribute.domain.join(', ') : attribute.valueType }}</td>
                     <td><input type="checkbox" v-model="attribute.active" disabled=true></td>
                     <td><input type="checkbox" v-model="attribute.dispFilter"></td>
                     <td><input type="checkbox" v-model="attribute.example"></td>

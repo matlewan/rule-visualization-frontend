@@ -4,8 +4,8 @@
     <div class="examples scrollbar">
         <table class="table table-sm">
             <tbody>
-                <tr v-for="e in examples" :key="e['ID']">
-                    <td @click="idx = e.idx ">Example {{ e.idx }}</td>
+                <tr v-for="e in examples" :key="e.idx">
+                    <td @click="idx = e.idx">Example {{ getID(e.idx) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -18,22 +18,23 @@
         <button @click="add" class="btn btn-success">Add</button>
         <button @click="del" class="btn btn-danger">Del</button>
     </div>
-    <h5>Example {{ idx }}</h5>
+	<h5 style="max-width: 350px;">Example {{ getID(idx) }}</h5>
     <div class="example scrollbar">
         <table class="table table-sm">
             <tbody>
-                <tr v-for="(value, name) in srcExamples[idx-1]" :key="name" v-show="name!='idx'">
-                    <td><label>{{ name }}</label></td>
+                <tr v-for="(value, name) in example" :key="name" v-show="['idx', 'rules'].indexOf(name) < 0">
+					<template v-if="attr(name).active">
+					<td><label>{{ name }}</label></td>
                     <td>
-                        <input type="text" name="ID" v-if="name == 'ID'" v-model="srcExamples[idx-1][name]">
-                        <input type="number" v-else-if="attr(name).valueType != 'enumeration'" v-model="srcExamples[idx-1][name]">
-                        <select v-else v-model="srcExamples[idx-1][name]" class="form-control-sm">
-                            <option v-for="(elem, idx) in attr(name).domain" :value="idx" :key="idx">
+                        <input type="text" name="ID" v-if="attr(name).valueType == undefined" v-model="example[name]" readonly>
+                        <input type="number" v-else-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
+                        <select v-else v-model="example[name]" class="form-control-sm" @change="edit(idx)">
+                            <option v-for="elem in attr(name).domain" :value="elem" :key="elem">
                                 {{ elem }}
                             </option>
                         </select>
-
                     </td>
+					</template>
                 </tr>
             </tbody>
         </table>
@@ -64,27 +65,54 @@ export default {
 	  idx: 1
   }},
   methods: {
-      match, add, del, reset, attr, clearRuleId
+      match, add, del, reset, attr, clearRuleId, edit, getID
+  },
+  computed: {
+	  example: function() {
+		  return this.srcExamples.find(e => e.idx == this.idx);
+	  }
   }
 };
+
+function getID(idx) {
+	var a = this.attributes.find(a => (a.active && a.valueType == undefined));
+	var e = this.srcExamples.find(e => e.idx == idx);
+	if (e == undefined) return undefined;
+	return (a == undefined) ? e.idx : e[a.name];
+}
+
+function edit(idx) {
+	Vue.set(this.srcExamples.find(e => e.idx == idx), 'rules', undefined);
+}
 
 function match() {
 	if (this.examples.length == 0) return;
     var data = {
-        example: this.examples[this.idx-1]
-    };
-    this.$parent.$emit('match', this.$event, data);
+        example: this.examples.find(e => e.idx == this.idx)
+	};
+	if (data.example.rules == undefined) {
+		alert('This example was added or changed.\nClick on Update button (Setup card) for refresh matching.' );
+	}
+	else this.$parent.$emit('match', this.$event, data);
 }
 
 function clearRuleId() {
 	this.$parent.$emit('setRule', this.$event, undefined);
 }
 
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 function add() {
 	var example = {};
 	var idx = this.srcExamples.length + 1
-	example['ID'] = idx;
+	example['ID'] = uuidv4();
 	example.idx = idx;
+	example.rules = undefined;
 	for (var attribute of app.attributes.filter(a => a.example && a.name != 'ID')) {
 		example[attribute.name] = 0;
 	}
@@ -93,13 +121,15 @@ function add() {
 }
 
 function del() {
-	this.$delete(this.examples, this.idx-1);
-	if (this.idx > this.examples.length)
-		this.idx -= 1;
+	var e = this.srcExamples.find(e => e.idx == this.idx);
+	var index = this.srcExamples.indexOf(e);
+	this.$delete(this.srcExamples, index);
+	index = Math.max(0, index-1);
+	this.idx = this.srcExamples[index].idx;
 }
 
 function reset() {
-    var data = { example: {} };
+    var data = { example: undefined };
     this.$parent.$emit('match', this.$event, data);
 }
 

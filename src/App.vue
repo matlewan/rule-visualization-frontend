@@ -37,7 +37,7 @@ export default {
       attributes: [],
       characteristics: { },
 	  srcExamples: [],
-	  example: {},
+	  example: undefined,
 	  ruleId: undefined
   }},
   methods: {
@@ -47,8 +47,7 @@ export default {
         this.attributes = a;
         this.srcRules = r;
 		this.rules = this.filteredRules = Object.assign([], [...this.srcRules]);
-		this.fil
-        this.characteristics = c;
+		this.characteristics = c;
     }, filterRules, filterRule, match, setRule, matchRule
   },
   components: {
@@ -91,7 +90,7 @@ function filterRules(evt, input) {
     });
 
 	this.rules = this.filteredRules = Object.assign([], this.srcRules.filter(rule => this.filterRule(rule, filter)));  
-	// this.match(evt, { example: this.example});
+	this.match(evt, { example: this.example});
 }
 function filterRule(rule, filter) {
 	// Filter operators and ranges
@@ -132,24 +131,16 @@ function filterRule(rule, filter) {
 
 function match(evt, data) {
 	this.example = data.example;
-    this.rules = Object.assign([], this.filteredRules.filter(r => matchRule(data.example, r)));
+	if (data.example != undefined) {
+		this.rules = Object.assign([], this.filteredRules.filter(rule => matchRule(data.example, rule)));
+	}
+	else this.rules = this.filteredRules;
 }
 
 function matchRule(example, rule) {
-    for (var condition of rule.conditions) {
-        var value = example[condition.name];
-        var op = condition.operator;
-		
-		if (value == undefined)
-            continue;
-        else if (op == ">=" && value < condition.value)
-            return false;
-        else if (op == "<=" && value > condition.value)
-            return false;
-    }
-    return true;
+	if (example.rules == undefined) return false;
+	else return example.rules.indexOf(rule.id-1) >= 0;
 }
-
 </script>
 
 <style>
