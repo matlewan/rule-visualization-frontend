@@ -25,7 +25,7 @@
 		</form>
 		<span style="white-space: pre;">{{ loadMsg }}</span>
 		<br />
-		<button class="btn btn-sm btn-success" @click="submit">Submit</button>
+		<button class="btn btn-sm btn-success" @click="load">Load</button>
 		<button class="btn btn-sm btn-info" @click="loadDemo">Load demo</button>
 		<button class="btn btn-sm btn-primary" v-if="dirtyExamples" @click="update">Update</button>
 		<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo files</button>
@@ -60,7 +60,7 @@ export default {
 	},
 	methods: { 
 		setAttributes, setRules, setExamples, browseAttributes, browseRules, browseExamples, 
-		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob
+		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob, load, preprocessing
 	},
 	components: { Attributes, Characteristics },
 	computed: {
@@ -71,6 +71,53 @@ export default {
 };
 var tmp_filename;
 function getAPI() { return 'http://localhost:8081/upload' }
+
+function download(href, download) {
+	var a = document.getElementById("download");
+	a.href = href;
+	a.target = "_self";
+	a.download = download;
+	a.click();
+}
+function downloadDemo() { download('./data/data.zip', 'data.zip'); }
+function downloadExamples() { download(URL.createObjectURL(this.getExamplesBlob()), 'examples.json'); }
+
+function getExamplesBlob() {
+	var replacer = function(key, value) {
+		var keysToOmit = ["idx", "rules"];
+		if (keysToOmit.indexOf(key) === -1) {
+			return value;
+		}
+	};
+	var data = JSON.stringify(this.$parent.srcExamples, replacer, 2);
+	return new Blob([data], { type: "text/json" });
+}
+
+function receive(data) {
+	if (data.status == 404) {
+		throw "Server API not found (HTTP 404) on " + data.url;
+	} else if (data.status != 200) {
+		throw "HTTP " + data.status + ": " + data.statusText + " (" + data.url + ")";
+	}
+	return data.json();
+}
+
+function browseAttributes() { document.getElementById("attributes").click(); }
+function browseRules() { document.getElementById("rules").click(); }
+function browseExamples() { document.getElementById("examples").click(); }
+function setAttributes() {
+	var file = document.getElementById("attributes").files[0];
+	document.getElementById("attributesText").value = file.name;
+}
+function setRules() {
+	var file = document.getElementById("rules").files[0];
+	document.getElementById("rulesText").value = file.name;
+	tmp_filename = file.name;
+}
+function setExamples() {
+	var file = document.getElementById("examples").files[0];
+	document.getElementById("examplesText").value = file.name;
+}
 
 function update() {
 	var component = this;
@@ -93,13 +140,49 @@ function update() {
 		});
 }
 
-function downloadDemo() {
-	var a = document.getElementById("downloadExamples");
-	a.href = './data/data.zip';
-	a.target = "_self";
-	a.download = 'data.zip';
-	a.click();
- }
+function load(files) { // Performs asynchronous operations (read JSON, fetch) and then run preprocessing
+	if (files.attributes == undefined) {
+		files.attributes = document.getElementById("attributes").files[0],
+		files.rules = document.getElementById("rules").files[0],
+		files.examples = document.getElementById("examples").files[0] || new Blob(['[]'])
+	}
+	if (files.attributes == undefined || files.rules == undefined) {
+		alert("Load attributes and rules before submit.");
+		return;
+	}
+
+	var attributes = [], examples = [], component = this;
+	var reader = new FileReader(), reader2 = new FileReader();
+	reader.onload = function() {
+		attributes = JSON.parse(reader.result);
+		reader2.onload = function() {
+			examples = JSON.parse(reader2.result);
+			component.submit(files).then(function(data) {
+				component.preprocessing(attributes, examples, data.rules, data.examples);
+				component.files = files;
+			}).catch(function(msg) {
+				component.loadMsg = msg;
+			});
+		}
+		reader2.readAsText(files.examples);
+	};
+	reader.readAsText(files.attributes);
+}
+
+function submit(files) {
+	var formData = new FormData();
+	formData.append("attributes", files.attributes);
+	formData.append("rules", files.rules);
+	formData.append("examples", files.examples);
+	return fetch(getAPI(), { method: "POST", body: formData }).then(response => receive(response))
+}	
+
+function preprocessing(attributes, examples, rules, matchings) {
+	loadAttributes(this, attributes);
+	loadExamples(this, examples);
+	loadRules(this, rules);
+	loadMatching(this, matchings);
+}
 
 function loadAttributes(component, data) {
 	for (var [i, attr] of data.entries()) {
@@ -117,30 +200,7 @@ function loadAttributes(component, data) {
 		});
 	}
 	component.attributes = data;
-	component.attributes.sort((a, b) =>
-		a.active > b.active || (a.active == b.active && a.name < b.name)
-			? -1
-			: 1
-	);
-}
-
-function getExamplesBlob() {
-	var replacer = function(key, value) {
-		var keysToOmit = ["idx", "rules"];
-		if (keysToOmit.indexOf(key) === -1) {
-			return value;
-		}
-	};
-	var data = JSON.stringify(this.$parent.srcExamples, replacer, 2);
-	return new Blob([data], { type: "text/json" });
-}
-
-function downloadExamples() {
-	var a = document.getElementById("downloadExamples");
-	a.href = URL.createObjectURL(this.getExamplesBlob());
-	a.target = "_self";
-	a.download = "examples.json";
-	a.click();
+	component.attributes.sort((a, b) => a.active > b.active || (a.active == b.active && a.name < b.name) ? -1 : 1 );
 }
 
 function loadExamples(component, data) {
@@ -151,14 +211,6 @@ function loadExamples(component, data) {
 	component.$parent.loadExamples(data);
 }
 
-function receive(data) {
-	if (data.status == 404) {
-		throw "Server API not found (HTTP 404) on " + data.url;
-	} else if (data.status != 200) {
-		throw "HTTP " + data.status + ": " + data.statusText + " (" + data.url + ")";
-	}
-	return data.json();
-}
 function loadRules(component, data) {
 	for (var i = 0; i < data.length; i++) {
 		data[i].id = i + 1;
@@ -170,88 +222,10 @@ function loadRules(component, data) {
 	component.$parent.load( component.attributes, component.rules, component.characteristics );
 }
 
-function browseAttributes() { document.getElementById("attributes").click(); }
-function browseRules() { document.getElementById("rules").click(); }
-function browseExamples() { document.getElementById("examples").click(); }
-function setAttributes() {
-	var file = document.getElementById("attributes").files[0];
-	document.getElementById("attributesText").value = file.name;
-}
-function setRules() {
-	var file = document.getElementById("rules").files[0];
-	document.getElementById("rulesText").value = file.name;
-	tmp_filename = file.name;
-}
-function setExamples() {
-	var file = document.getElementById("examples").files[0];
-	document.getElementById("examplesText").value = file.name;
-}
-
-function submit(data) {
-	var files = data.attributes != undefined ? data : {
-		attributes: document.getElementById("attributes").files[0],
-		rules: document.getElementById("rules").files[0],
-		examples: document.getElementById("examples").files[0]
-	};
-	var component = this;
-
-	if (files.attributes == undefined || files.rules == undefined) {
-		this.loadMsg = "Load attributes and rules before submit.";
-		return;
-	} 
-	var reader = new FileReader();
-	reader.onload = function() {
-		loadAttributes(component, JSON.parse(reader.result));
-		var reader2 = new FileReader();
-		reader2.onload = function() {
-			loadExamples(component, JSON.parse(reader2.result));
-
-			var formData = new FormData();
-			formData.append("attributes", files.attributes);
-			formData.append("rules", files.rules);
-			formData.append("examples", files.examples);
-
-			fetch(getAPI(), {
-				method: "POST",
-				body: formData
-			})
-				.then(response => receive(response))
-				.then(function(data) {
-					loadRules(component, data.rules);
-					loadMatching(component.examples, data.examples);
-					component.files = files;
-				})
-				.catch(function(msg) {
-					component.loadMsg = msg;
-				});
-		};
-		reader2.readAsText(files.examples);
-	};
-	reader.readAsText(files.attributes);
-	
-}
-
 function loadMatching(examples, pairs) {
 	for (var i = 0; i < examples.length; i++) {
 		examples[i].rules = pairs[i].rules;
 	}
-}
-
-function loadDemo() {
-	var submit = this.submit;
-	tmp_filename = undefined;
-	var getFile = function(url) {
-		return fetch(url, { method: "GET" })
-		.then(response => response.blob()) 
-	}
-	var getFiles = function() { return Promise.all([ // waits for all fetches from server
-		getFile("/data/attributes.json"), 
-		getFile("/data/rules.xml"), 
-		getFile("/data/examples.json")
-	]); };
-	getFiles().then( ([a, r, e]) => {
-		submit({attributes: a, rules: r, examples: e});
-	});
 }
 
 function loadCharacteristics(component) {
@@ -285,6 +259,23 @@ function loadCharacteristics(component) {
 		c.step = c.max > 1 ? 1 : 0.01;
 	}
 	component.characteristics = Object.assign( {}, component.characteristics, {} );
+}
+
+function loadDemo() {
+	var load = this.load;
+	tmp_filename = undefined;
+	var getFile = function(url) {
+		return fetch(url, { method: "GET" })
+		.then(response => response.blob()) 
+	}
+	var getFiles = function() { return Promise.all([ // waits for all fetches from server
+		getFile("/data/attributes.json"), 
+		getFile("/data/rules.xml"), 
+		getFile("/data/examples.json")
+	]); };
+	getFiles().then( ([a, r, e]) => {
+		load({attributes: a, rules: r, examples: e});
+	});
 }
 </script>
 
