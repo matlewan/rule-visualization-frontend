@@ -119,7 +119,7 @@ function add() {
 		example[name] = uuidv4(); 
 	var idxs = this.examples.map(e => e.__idx)
 	example.__idx = idxs.length == 0 ? 1 : Math.max(...idxs) + 1;
-	for (var attribute of this.attributes.filter(a => a.active && a.identifierType != undefined)) {
+	for (var attribute of this.attributes.filter(a => a.active && a.identifierType == undefined)) {
 		example[attribute.name] = attribute.domain != undefined ? attribute.domain[0] : 0;
 	}
 	this.examples.push(example);
