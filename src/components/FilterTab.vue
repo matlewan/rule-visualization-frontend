@@ -5,19 +5,21 @@
 	<a @click="activesubtab=2" :class="{'active': activesubtab === 2, 'status-active': status.match}">Match</a>
 </div>
 <div class='tab-content' v-show="activesubtab==1">
+	<template v-if="Object.keys(characteristics).length > 0">
 	<h5>Characteristics</h5>
 	<div class="c-filter scrollbar">
 		<table class="table table-sm">
 			<tbody>
 				<tr v-for="(value, name) in activeCharacteristics" :key="name">
-					<td><label>{{ value.name }}</label></td>
-					<td><input type="number" v-model="value.range[0]" :step="value.step" :min="0" :max="value.range[1]"></td>
-					<td><vue-slider class="slider" v-model="value.range" :max="Math.max(value.max, 1)" :min="0" :interval="value.step"/></td>
-					<td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="Math.max(value.max, 1)"></td>
+					<td><label>{{ value.dispName }}</label></td>
+					<td><input type="number" v-model="value.range[0]" :step="value.step" :min="value.min" :max="value.range[1]"></td>
+					<td><vue-slider class="slider" :silent="true" v-model="value.range" :max="value.max" :min="value.min" :interval="interval(value)"/></td>
+					<td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="value.max"></td>
 				</tr>
 			</tbody>
 		</table>
 	</div>
+	</template>
 	<h5>Attributes</h5>
 	<input @click="checkAll" type="checkbox" name="all" id="all"><label for="all">All</label>
 	<label style="margin: 0 10px 0 20px;" for="aOperator">Join operator: </label>
@@ -45,8 +47,8 @@
 						<option value=">=">&ge;</option>
 						<option value="<=">&le;</option>
 					</select></td>
-					<td><vue-slider class="slider" v-model="attribute.filter.range" :max="Math.max(attribute.max, 1)" :min="0" :interval="1" 
-						:tooltip-formatter="attribute.domain != undefined ? val => attribute.domain[val] : undefined"/></td>
+					<td><vue-slider class="slider" v-model="attribute.filter.range" :max="attribute.max" :min="attribute.min" :interval="interval(attribute)" 
+						:tooltipPlacement="'left'" :dotSize="14" :silent="true" :tooltip-formatter="attribute.domain != undefined ? val => attribute.domain[val] : undefined"/></td>
 				</template>
 			</tr>
 		</tbody>
@@ -55,7 +57,7 @@
 	<button @click="reset" class="btn btn-primary">Reset</button>
 	<button @click="apply" class="btn btn-success">Apply</button>
 </div>
-<Examples class='tab-content' v-show="activesubtab==2" :attributes="attributes" :srcExamples="srcExamples" :examples="examples" :ruleId="ruleId"></Examples>
+<Examples class='tab-content' v-show="activesubtab==2" :attributes="attributes" :examples="examples" :filteredExamples="filteredExamples" :ruleId="ruleId"></Examples>
 </div>
 </template>
 
@@ -69,7 +71,7 @@ export default {
   props: {
       characteristics: Object,
       attributes: Array,
-	  srcExamples: Array,
+	  filteredExamples: Array,
 	  examples: Array,
 	  ruleId: Number,
 	  status: Object
@@ -96,9 +98,13 @@ export default {
       VueSlider, Examples
   },
   methods: {
-      apply, reset, resetCheckboxes, check, checkOne, checkAll, attr, selected
+      apply, reset, resetCheckboxes, check, checkOne, checkAll, attr, selected, interval
   }
 };
+
+function interval(obj) {
+	return parseFloat(((obj.max - obj.min) / (obj.intervals)).toPrecision(8));
+}
 
 function selected(attribute) {
 	var elems = attribute.filter.range.map(v => attribute.domain[v]);

@@ -10,7 +10,7 @@
     <div class="content">
         <FormLoader class='tab-content' v-show="activetab==1"></FormLoader>
         <FilterTab  @apply="filterRules" @match="match" @setRule="setRule" class='tab-content' v-show="activetab==2" 
-                    :srcExamples="srcExamples" :examples="examples" :characteristics="characteristics" :attributes="attributes" 
+                    :examples="examples" :filteredExamples="filteredExamples" :characteristics="characteristics" :attributes="attributes" 
 					:ruleId="ruleId" :status="status">
         </FilterTab>
         <TableTab  	@setRule="setRule" class='tab-content' v-show="activetab==2" 
@@ -36,7 +36,7 @@ export default {
 	  filteredRules: [],
       attributes: [],
       characteristics: { },
-	  srcExamples: [],
+	  examples: [],
 	  example: undefined,
 	  ruleId: undefined
   }},
@@ -47,18 +47,18 @@ export default {
         this.srcRules = r;
 		this.rules = this.filteredRules = Object.assign([], [...this.srcRules]);
 		this.characteristics = c;
-		this.srcExamples = e;
+		this.examples = e;
     }, filterRules, filterRule, match, setRule, matchRule
   },
   components: {
     FormLoader, FilterTab, TableTab, Statistics
   },
   computed: {
-	examples: function(ruleId) {
+	filteredExamples: function(ruleId) {
 		if (this.ruleId == undefined)
-			return this.srcExamples;
+			return this.examples;
 		var rule = this.srcRules[this.ruleId-1]; 
-		return this.srcExamples.filter(e => matchRule(e, rule));
+		return this.examples.filter(e => matchRule(e, rule));
 	},
 	status: function() { return {
 		filter: this.srcRules.length != this.filteredRules.length,
@@ -138,8 +138,8 @@ function match(evt, data) {
 }
 
 function matchRule(example, rule) {
-	if (example.rules == undefined) return false;
-	else return example.rules.indexOf(rule.id-1) >= 0;
+	if (example.__rules == undefined) return false;
+	else return example.__rules.indexOf(rule.id-1) >= 0;
 }
 </script>
 

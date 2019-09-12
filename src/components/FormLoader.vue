@@ -27,9 +27,13 @@
 		<br />
 		<button class="btn btn-sm btn-success" @click="load">Load</button>
 		<button class="btn btn-sm btn-info" @click="loadDemo">Load demo</button>
-		<button class="btn btn-sm btn-primary" v-if="dirtyExamples" @click="update">Update</button>
-		<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo files</button>
-		<button class="btn btn-sm btn-secondary" v-if="dirtyExamples" @click="downloadExamples">Download examples</button><a id="downloadExamples" style="display:none;"></a>
+		<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
+		<label>Demo: </label>
+		<select v-model="demoFolder" class="form-control-sm">
+			<option value="prioritisation">Prioritisation</option>
+			<option value="windsor">Windsor</option>
+		</select>
+		<a id="download" style="display:none;"></a>
 		<div class="tabs" v-if="attributes.length > 0">
 			<a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
 			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Characteristics</a>
@@ -51,7 +55,8 @@ export default {
 		return {
 			loadMsg: "",
 			activetab: 1,
-			files: {}
+			files: {},
+			demoFolder: 'prioritisation',
 		};
 	},
 	methods: { 
@@ -62,10 +67,11 @@ export default {
 	computed: {
 		attributes: function() { return this.$parent.attributes; },
 		characteristics: function() { return this.$parent.characteristics; },
-		examples: function() { return this.$parent.srcExamples; },
-		dirtyExamples: function() {
-			return this.$parent.srcExamples.length > 0;
-		}
+		examples: function() { return this.$parent.examples; }
+	},
+	mounted: function() {
+		this.$root.$on('updateExamples', () => { this.update(); }); 
+		this.$root.$on('downloadExamples', () => { this.downloadExamples(); }); 
 	}
 };
 var tmp_filename;
@@ -78,17 +84,17 @@ function download(href, filename) {
 	a.download = filename;
 	a.click();
 }
-function downloadDemo() { download('./data/data.zip', 'data.zip'); }
+function downloadDemo() { download('./data/' + this.demoFolder + '/data.zip', this.demoFolder + '.zip'); }
 function downloadExamples() { download(URL.createObjectURL(this.getExamplesBlob()), 'examples.json'); }
 
-function getExamplesBlob() {
+function getExamplesBlob(e) {
 	var replacer = function(key, value) {
-		var keysToOmit = ["idx", "rules"];
+		var keysToOmit = ["__idx", "__rules"];
 		if (keysToOmit.indexOf(key) === -1) {
 			return value;
 		}
 	};
-	var data = JSON.stringify(this.$parent.srcExamples, replacer, 2);
+	var data = JSON.stringify(e || this.examples, replacer, 2);
 	return new Blob([data], { type: "text/json" });
 }
 
@@ -120,13 +126,15 @@ function receive(data) {
 
 function update() {
 	var component = this;
+	var dirtyExamples = this.examples.filter(e => e.__rules == undefined);
 	var files = {
 		attributes: this.files.attributes,
 		rules: this.files.rules,
-		examples: this.getExamplesBlob()
+		examples: this.getExamplesBlob(dirtyExamples)
 	};
 	this.submit(files).then(function(data) {
-		loadMatching(component.$parent.srcExamples, data.examples);
+		loadMatching(dirtyExamples, data.examples);
+		component.$root.$emit('updateExamples-ok');
 		var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
 		component.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
 		component.files = files;
@@ -137,15 +145,16 @@ function update() {
 
 function loadDemo() {
 	var load = this.load;
+	var path = '/data/' + this.demoFolder + '/';
 	tmp_filename = undefined;
 	var getFile = function(url) {
 		return fetch(url, { method: "GET" })
 		.then(response => response.blob()) 
 	}
 	var getFiles = function() { return Promise.all([ // waits for all fetches from server
-		getFile("/data/attributes.json"), 
-		getFile("/data/rules.xml"), 
-		getFile("/data/examples.json")
+		getFile(path + "attributes.json"), 
+		getFile(path + "rules.xml"), 
+		getFile(path + "examples.json")
 	]); };
 	getFiles().then( ([a, r, e]) => {
 		load({attributes: a, rules: r, examples: e});
@@ -159,7 +168,7 @@ function load(files) { // Performs asynchronous operations (read JSON, fetch) an
 		files.examples = document.getElementById("examples").files[0] || new Blob(['[]'])
 	}
 	if (files.attributes == undefined || files.rules == undefined) {
-		alert("Load attributes and rules before submit.");
+		alert("Select attributes and rules files from your filesystem\nor click 'Load demo' button.");
 		return;
 	}
 
@@ -169,11 +178,9 @@ function load(files) { // Performs asynchronous operations (read JSON, fetch) an
 		attributes = JSON.parse(reader.result);
 		reader2.onload = function() {
 			examples = JSON.parse(reader2.result);
-			component.submit(files).then(function(data) {
+			component.submit(files, component).then(function(data) {
 				component.preprocessing(attributes, examples, data.rules, data.examples);
 				component.files = files;
-			}).catch(function(msg) {
-				component.loadMsg = msg;
 			});
 		}
 		reader2.readAsText(files.examples);
@@ -181,21 +188,24 @@ function load(files) { // Performs asynchronous operations (read JSON, fetch) an
 	reader.readAsText(files.attributes);
 }
 
-function submit(files) {
+function submit(files, component) {
 	var formData = new FormData();
 	formData.append("attributes", files.attributes);
 	formData.append("rules", files.rules);
 	formData.append("examples", files.examples);
-	return fetch(getAPI(), { method: "POST", body: formData }).then(response => receive(response))
+	return fetch(getAPI(), { method: "POST", body: formData })
+		.then(response => receive(response))
+		.catch(function(msg) { component.loadMsg = msg; })
 }	
 
-function preprocessing(attributes, examples, rules, matchings) {
+function preprocessing(attributes, examples, rules, matchings) { // initial operations on loaded data
 	loadAttributes(attributes);
 	loadExamples(examples);
 	loadMatching(examples, matchings); // should be after loadExamples
 	loadRules(rules);
 	var characteristics = {};
 	loadCharacteristics(characteristics, rules); // should be after loadRules
+	loadAttributesMinMaxRange(attributes, rules); // should be after loadRules
 
 	this.$parent.load(attributes, rules, characteristics, examples);
 	var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
@@ -204,12 +214,12 @@ function preprocessing(attributes, examples, rules, matchings) {
 
 function loadExamples(data) {
 	for (var i = 0; i < data.length; i++) {
-		data[i]["idx"] = i + 1;
+		data[i]["__idx"] = i + 1;
 	}
 }
 function loadMatching(examples, pairs) {
 	for (var i = 0; i < examples.length; i++) {
-		examples[i].rules = pairs[i].rules;
+		examples[i].__rules = pairs[i].rules;
 	}
 }
 function loadRules(data) {
@@ -219,13 +229,17 @@ function loadRules(data) {
 }
 
 function loadAttributes(data) {
+	if (data.find(a => ['__idx', '__rules'].indexOf(a.name) >= 0)) {
+		alert('Attributes: __idx and __rules are used within application\nfor identifying and matching objects.\nChange your data to prevent errors.');
+	}
 	for (var [i, attr] of data.entries()) {
 		attr.id = i + 1;
 		attr.dispName = attr.name;
 		attr.example = attr.active;
 		attr.dispFilter = attr.active && attr.valueType != undefined;
 		attr.min = 0;
-		attr.max = attr.domain == undefined ? 100 : attr.domain.length - 1;
+		attr.max = (attr.domain == undefined) ? 100 : attr.domain.length - 1;
+		attr.intervals = (attr.domain == undefined) ? 20 : (attr.domain.length-1);
 		Vue.set(attr, "filter", {
 			include: undefined,
 			op: "",
@@ -233,6 +247,31 @@ function loadAttributes(data) {
 		});
 	}
 	data.sort((a, b) => a.active > b.active || (a.active == b.active && a.name < b.name) ? -1 : 1 );
+}
+
+function isNumeric(n) { 
+	try {
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	} catch(e) {
+		console.log(n);
+	}
+}
+
+function loadAttributesMinMaxRange(attributes, rules) {
+	var allConditions = [];
+	for (var rule of rules)
+		allConditions.push(...rule.conditions, ...rule.decisions.flat());
+	
+	var numericAttributes = attributes.filter(a => a.active && a.domain == undefined && a.identifierType == undefined);
+	var numericAttributesNames = numericAttributes.map(a => a.name);
+	allConditions = allConditions.filter(c => isNumeric(c.value) && (numericAttributesNames.indexOf(c.name) >= 0));
+
+	for (var a of numericAttributes) {
+		var values = allConditions.filter(c => c.name == a.name).map(c => c.value);
+		a.min = Math.min(...values);
+		a.max = Math.max(...values);
+		Vue.set(a.filter, 'range', [a.min, a.max]);
+	}
 }
 
 function loadCharacteristics(characteristics, rules) {
@@ -253,14 +292,15 @@ function loadCharacteristics(characteristics, rules) {
 	for (name in characteristics) {
 		var c = characteristics[name];
 		c.name = name;
+		Vue.set(c, 'dispName', name);
 		c.active = c.range[0] != c.range[1];
 		c.filter = c.active;
 		c.display = c.active;
 		c.range[0] = Math.floor(c.range[0] * 1000) / 1000;
 		c.range[1] = Math.ceil(c.range[1] * 1000) / 1000;
-		c.min = c.range[0];
-		c.max = c.range[1];
-		c.step = c.max > 1 ? 1 : 0.01;
+		c.min = c.range[0] > 0 ? 0 : (c.range[0] > -1) ? -1 : Math.floor(c.range[0]);
+		c.max = c.range[1] < 1 ? 1 : Math.ceil(c.range[1].toPrecision(2));
+		c.intervals = 20;
 	}
 }
 </script>
@@ -271,4 +311,5 @@ function loadCharacteristics(characteristics, rules) {
 .tabs { margin-top: 10px; }
 .btn { margin-right: 10px; }
 .form-control-sm { width: 330px; }
+select.form-control-sm { width: 110px; padding-left: 0; margin-left: 10px;}
 </style>

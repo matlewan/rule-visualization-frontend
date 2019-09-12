@@ -4,8 +4,8 @@
     <div class="examples scrollbar">
         <table class="table table-sm">
             <tbody>
-                <tr v-for="e in examples" :key="e.idx">
-                    <td @click="idx = e.idx">Example {{ getID(e.idx) }}</td>
+                <tr v-for="e in filteredExamples" :key="e.__idx">
+                    <td @click="idx = e.__idx">Example {{ getID(e) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -18,16 +18,16 @@
         <button @click="add" class="btn btn-success">Add</button>
         <button @click="del" class="btn btn-danger">Del</button>
     </div>
-	<h5 style="max-width: 350px;">Example {{ getID(idx) }}</h5>
+	<h5 style="max-width: 350px;">Example {{ getID(example) }}</h5>
     <div class="example scrollbar">
         <table class="table table-sm">
             <tbody>
-                <tr v-for="(value, name) in example" :key="name" v-show="attr(name).valueType != undefined">
+                <tr v-for="(value, name) in example" :key="name">
 					<template v-if="attr(name).active">
 					<td><label>{{ name }}</label></td>
                     <td>
-                        <!-- <input type="text" name="ID" v-if="attr(name).valueType == undefined" v-model="example[name]" readonly> -->
-                        <input type="number" v-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
+                        <input type="text" name="ID" v-if="attr(name).identifierType != undefined" v-model="example[name]">
+                        <input type="number" v-else-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
                         <select v-else v-model="example[name]" class="form-control-sm" @change="edit(idx)">
                             <option v-for="elem in attr(name).domain" :value="elem" :key="elem">
                                 {{ elem }}
@@ -39,8 +39,9 @@
             </tbody>
         </table>
     </div>
-    <button @click="reset" class="btn btn-primary">Reset</button>
-    <button @click="match" class="btn btn-success">Match</button>
+    <button @click="reset" class="btn btn-sm btn-primary">Reset</button>
+    <button @click="match" class="btn btn-sm btn-success">Match</button>
+	<button class="btn btn-sm btn-secondary" @click="download">Download</button>
     </div>
 </template>
 
@@ -53,47 +54,51 @@ export default {
   props: {
       attributes: Array,
 	  examples: Array,
-	  srcExamples: Array,
+	  filteredExamples: Array,
 	  ruleId: Number
   },
   data() { return {
       conditionLike: '',
       all: false,
       aOperator: "OR",
-      dOperator: "",
       activetab: 1,
 	  idx: 1
   }},
   methods: {
-      match, add, del, reset, attr, clearRuleId, edit, getID
+      match, add, del, reset, attr, clearRuleId, edit, getID, download
   },
   computed: {
 	  example: function() {
-		  return this.srcExamples.find(e => e.idx == this.idx);
+		  return this.examples.find(e => e.__idx == this.idx);
 	  }
+  },
+  mounted: function() {
+		this.$root.$on('updateExamples-ok', () => { 
+			this.$parent.$emit('match', this.$event, { example: this.example }); 
+		}); 
   }
 };
 
-function getID(idx) {
+function download() { 
+	this.$root.$emit('downloadExamples'); 
+}
+
+function getID(e) {
 	var a = this.attributes.find(a => (a.active && a.valueType == undefined));
-	var e = this.srcExamples.find(e => e.idx == idx);
 	if (e == undefined) return undefined;
-	return (a == undefined) ? e.idx : e[a.name];
+	return (a == undefined) ? e.__idx : e[a.name];
 }
 
 function edit(idx) {
-	Vue.set(this.srcExamples.find(e => e.idx == idx), 'rules', undefined);
+	Vue.set(this.examples.find(e => e.__idx == idx), '__rules', undefined);
 }
 
 function match() {
-	if (this.examples.length == 0) return;
-    var data = {
-        example: this.examples.find(e => e.idx == this.idx)
-	};
-	if (data.example.rules == undefined) {
-		alert('This example was added or changed.\nClick on Update button (Setup card) for refresh matching.' );
+	if (this.example == undefined) return;
+	if (this.example.__rules == undefined) {
+		this.$root.$emit('updateExamples');
 	}
-	else this.$parent.$emit('match', this.$event, data);
+	else this.$parent.$emit('match', this.$event, { example: this.example });
 }
 
 function clearRuleId() {
@@ -108,24 +113,25 @@ function uuidv4() {
 }
 
 function add() {
-	var example = {};
-	var idx = this.srcExamples.length + 1
-	example['ID'] = uuidv4();
-	example.idx = idx;
-	example.rules = undefined;
-	for (var attribute of app.attributes.filter(a => a.example && a.name != 'ID')) {
-		example[attribute.name] = 0;
+	var example = { __idx: 0 };
+	var ids = this.attributes.filter(a => a.active && a.identifierType == 'uuid').map(a => a.name);
+	for (name of ids)
+		example[name] = uuidv4(); 
+	var idxs = this.examples.map(e => e.__idx)
+	example.__idx = idxs.length == 0 ? 1 : Math.max(...idxs) + 1;
+	for (var attribute of this.attributes.filter(a => a.active && a.identifierType != undefined)) {
+		example[attribute.name] = attribute.domain != undefined ? attribute.domain[0] : 0;
 	}
-	this.srcExamples.push(example);
-	this.idx = idx;
+	this.examples.push(example);
+	this.idx = example.__idx;
 }
 
 function del() {
-	var e = this.srcExamples.find(e => e.idx == this.idx);
-	var index = this.srcExamples.indexOf(e);
-	this.$delete(this.srcExamples, index);
+	var index = this.examples.indexOf(this.examples.find(e => e.__idx == this.example.__idx));
+	this.$delete(this.examples, index);
 	index = Math.max(0, index-1);
-	this.idx = this.srcExamples[index].idx;
+	var e = this.examples[index]
+	this.idx = e == undefined ? 0 : e.__idx;
 }
 
 function reset() {
