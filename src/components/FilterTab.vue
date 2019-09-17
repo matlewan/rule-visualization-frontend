@@ -57,8 +57,9 @@
 	<button @click="reset" class="btn btn-primary">Reset</button>
 	<button @click="apply" class="btn btn-success">Apply</button>
 </div>
-<Examples class='tab-content' v-show="activesubtab==2" :attributes="attributes" :examples="examples" :filteredExamples="filteredExamples" :ruleId="ruleId"></Examples>
-</div>
+<div class='tab-content' v-show="activesubtab==2">
+<Examples class='e-filter' :attributes="attributes" :examples="examples" :filteredExamples="filteredExamples" :ruleId="ruleId"></Examples>
+</div></div>
 </template>
 
 <script>
@@ -167,6 +168,7 @@ function checkAll() {
         margin-bottom: 5px;
         overflow: auto;
         width: 360px;
+		max-width: 360px;
     }
 	.attrName div { width: 150px; overflow-x: hidden; margin: 0; } /* Sets max width of attributes' names */
 	.attrName { width: 160px; } /* Wrapper for above (width >= width of .attrName div)

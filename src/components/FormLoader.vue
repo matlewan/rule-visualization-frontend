@@ -75,7 +75,7 @@ export default {
 	}
 };
 var tmp_filename;
-function getAPI() { return 'http://localhost:8081/upload' }
+function getAPI() { return '/api/upload' }
 
 function download(href, filename) {
 	var a = document.getElementById("download");

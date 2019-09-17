@@ -24,7 +24,7 @@
             <tbody>
                 <tr v-for="(value, name) in example" :key="name">
 					<template v-if="attr(name).active">
-					<td><label>{{ name }}</label></td>
+					<td><label>{{ attr(name).dispName }}</label></td>
                     <td>
                         <input type="text" name="ID" v-if="attr(name).identifierType != undefined" v-model="example[name]">
                         <input type="number" v-else-if="attr(name).valueType != 'enumeration'" v-model="example[name]" @change="edit(idx)">
@@ -165,7 +165,7 @@ function attr(name) {
         cursor: pointer;
     }
     .example {
-        max-height: 50vh;
+        max-height: 45vh;
     }
     .example input,select {
         width: 130px;
