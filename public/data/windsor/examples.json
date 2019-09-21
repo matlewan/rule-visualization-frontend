@@ -1,1 +1,58 @@
-[]
+[
+  {
+	"name": "Przestronny dom",
+    "air_cond": "1",
+    "basement": "1",
+    "desire_loc": "1",
+    "drive": "0",
+    "lot_size": "4255.0",
+    "nbath": "2",
+    "nbed": "3",
+    "ngarage": "1",
+    "nstoreys": "1",
+    "rec_room": "1",
+    "sale_price": "0"
+  },
+  {
+	"name": "Willa w centrum",
+    "air_cond": "0",
+    "basement": "0",
+    "desire_loc": "0",
+    "drive": "0",
+    "lot_size": 0,
+    "nbath": "1",
+    "nbed": "1",
+    "ngarage": "0",
+    "nstoreys": "1",
+    "rec_room": "0",
+    "sale_price": "0"
+  },
+  {
+	"name": "Mieszkanie Grunwald",
+    "air_cond": "0",
+    "basement": "0",
+    "desire_loc": "0",
+    "drive": "0",
+    "lot_size": 0,
+    "nbath": "1",
+    "nbed": "1",
+    "ngarage": "0",
+    "nstoreys": "1",
+    "rec_room": "0",
+    "sale_price": "0"
+  },
+  {
+	"name": "Kawalerka Piątkowo",
+    "air_cond": "0",
+    "basement": "0",
+    "desire_loc": "0",
+    "drive": "0",
+    "lot_size": 0,
+    "nbath": "1",
+    "nbed": "1",
+    "ngarage": "0",
+    "nstoreys": "1",
+    "rec_room": "0",
+    "sale_price": "0"
+  }
+]

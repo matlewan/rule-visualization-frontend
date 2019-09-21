@@ -5,7 +5,7 @@
         <table class="table table-sm">
             <tbody>
                 <tr v-for="e in filteredExamples" :key="e.__idx">
-                    <td @click="idx = e.__idx">Example {{ getID(e) }}</td>
+                    <td @click="idx = e.__idx">{{ getID(e) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -18,7 +18,7 @@
         <button @click="add" class="btn btn-success">Add</button>
         <button @click="del" class="btn btn-danger">Del</button>
     </div>
-	<h5 style="max-width: 350px;">Example {{ getID(example) }}</h5>
+	<h5 style="max-width: 350px;">{{ getID(example) }}</h5>
     <div class="example scrollbar">
         <table class="table table-sm">
             <tbody>
@@ -86,7 +86,7 @@ function download() {
 function getID(e) {
 	var a = this.attributes.find(a => (a.active && a.valueType == undefined));
 	if (e == undefined) return undefined;
-	return (a == undefined) ? e.__idx : e[a.name];
+	return (a == undefined) ? "Example " + e.__idx : e[a.name];
 }
 
 function edit(idx) {

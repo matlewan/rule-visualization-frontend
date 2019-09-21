@@ -19,7 +19,7 @@
 				<input type="file" class="file" id="examples" style="display: none;" @change="setExamples" />
 				<div class="input-group col-xs-12">
 					<button class="browse btn-sm btn-secondary input" type="button" @click="browseExamples">Browse</button>
-					<input id="examplesText" type="text" class="form-control-sm input" disabled placeholder="Examples (JSON)" />
+					<input id="examplesText" type="text" class="form-control-sm input" disabled placeholder="Examples (JSON) - optional" />
 				</div>
 			</div>
 		</form>

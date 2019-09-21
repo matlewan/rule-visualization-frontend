@@ -1,4 +1,9 @@
 [
+	{
+	"name": "name",
+	"active": true,
+	"identifierType": "string"
+    },
     {
 	"name": "lot_size",
 	"active": true,
