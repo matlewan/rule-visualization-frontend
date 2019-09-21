@@ -1,10 +1,10 @@
 <template>
-<div v-if="attributes.length > 0" style="float: left;">
+<div v-if="attributes.length > 0" id="filter-wrapper">
 <div class="tabs">
 	<a @click="activesubtab=1" :class="{'active': activesubtab === 1, 'status-active': status.filter}">Filter</a>
 	<a @click="activesubtab=2" :class="{'active': activesubtab === 2, 'status-active': status.match}">Match</a>
 </div>
-<div class='tab-content' v-show="activesubtab==1">
+<div class='filter' v-show="activesubtab==1">
 	<template v-if="Object.keys(characteristics).length > 0">
 	<h5>Characteristics</h5>
 	<div class="c-filter scrollbar">
@@ -21,12 +21,14 @@
 	</div>
 	</template>
 	<h5>Attributes</h5>
-	<input @click="checkAll" type="checkbox" name="all" id="all"><label for="all">All</label>
-	<label style="margin: 0 10px 0 20px;" for="aOperator">Join operator: </label>
-	<select class="form-control-sm" v-model="aOperator" name="aOperator">
-		<option value="OR">or</option>
-		<option value="AND">and</option>
-	</select>
+	<div id="attribute-options">
+		<input @click="checkAll" type="checkbox" name="all" id="all"><label for="all">All</label>
+		<label style="margin: 0 10px 0 20px;" for="aOperator">Join operator: </label>
+		<select class="form-control-sm" v-model="aOperator" name="aOperator">
+			<option value="OR">or</option>
+			<option value="AND">and</option>
+		</select>
+	</div>
 	<div class="a-filter scrollbar">
 		<table class="table table-sm">
 		<tbody>
@@ -54,12 +56,15 @@
 		</tbody>
 		</table>
 	</div>
-	<button @click="reset" class="btn btn-primary">Reset</button>
-	<button @click="apply" class="btn btn-success">Apply</button>
+	<div id="filter-options">
+		<button @click="reset" class="btn btn-primary">Reset</button>
+		<button @click="apply" class="btn btn-success">Apply</button>
+	</div>
 </div>
-<div class='tab-content' v-show="activesubtab==2">
-<Examples class='e-filter' :attributes="attributes" :examples="examples" :filteredExamples="filteredExamples" :ruleId="ruleId"></Examples>
-</div></div>
+<div class='match' v-show="activesubtab==2">
+<Examples :attributes="attributes" :examples="examples" :filteredExamples="filteredExamples" :ruleId="ruleId"></Examples>
+</div>
+</div>
 </template>
 
 <script>
@@ -160,16 +165,26 @@ function checkAll() {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 	/* Main elements sizes */
-	.a-filter { max-height: calc(100vh - 450px); }
-	.c-filter { max-height: 250px; }
-    .a-filter,.c-filter {
-        flex-grow: 0;
-        margin-right: 10px;
-        margin-bottom: 5px;
-        overflow: auto;
+	#filter-wrapper { display: flex; flex-direction: column;}
+	.filter {
         width: 360px;
 		max-width: 360px;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-height: 200px;
+	}
+    .a-filter,.c-filter {
+        margin-right: 10px;
+        overflow: auto;
+		flex: -1;
+		padding-bottom: 5px;
     }
+	#attributes-options,#filter-options {
+		display: flex;
+		flex-direction: row;
+	}
+
 	.attrName div { width: 150px; overflow-x: hidden; margin: 0; } /* Sets max width of attributes' names */
 	.attrName { width: 160px; } /* Wrapper for above (width >= width of .attrName div)
     .c-filter label { max-width: 150px; } /* Sets max width of characteristics' names */

@@ -1,5 +1,5 @@
 <template>
-    <div class="attributes-table scrollbar">
+    <div class="scrollbar">
         <table class="table table-sm">
             <thead>
                 <tr>
@@ -52,12 +52,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    .attributes-table {
-        height: 50vh;
-        overflow: auto;
+	table {
+		display: inline-block;
         white-space: pre;
-        flex-grow: 1;
-        float: left;
     }
     table { margin: 0; }
     table thead th {

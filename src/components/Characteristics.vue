@@ -42,11 +42,8 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
     .characteristics-table {
-        height: 50vh;
-        overflow: auto;
+		display: inline-block;
         white-space: pre;
-        flex-grow: 1;
-        float: left;
     }
 
     table {

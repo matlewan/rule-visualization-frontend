@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="form-loader">
 		<form style="max-width: 500px;">
 			<div class="form-group">
 				<input type="file" class="file" id="attributes" style="display: none;" @change="setAttributes" />
@@ -24,23 +24,24 @@
 			</div>
 		</form>
 		<span style="white-space: pre;">{{ loadMsg }}</span>
-		<br />
-		<button class="btn btn-sm btn-success" @click="load">Load</button>
-		<button class="btn btn-sm btn-info" @click="loadDemo">Load demo</button>
-		<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
-		<label>Demo: </label>
-		<select v-model="demoFolder" class="form-control-sm">
-			<option value="prioritisation">Prioritisation</option>
-			<option value="windsor">Windsor</option>
-		</select>
-		<a id="download" style="display:none;"></a>
+		<div class="form-buttons">
+			<button class="btn btn-sm btn-success" @click="load">Load</button>
+			<button class="btn btn-sm btn-info" @click="loadDemo">Load demo</button>
+			<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
+			<label>Demo: </label>
+			<select v-model="demoFolder" class="form-control-sm">
+				<option value="prioritisation">Prioritisation</option>
+				<option value="windsor">Windsor</option>
+			</select>
+			<a id="download" style="display:none;"></a>
+		</div>
 		<div class="tabs" v-if="attributes.length > 0">
 			<a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
 			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Characteristics</a>
 		</div>
-		<div class="content" v-if="attributes.length > 0">
-			<Attributes class="tab-content" v-show="activetab==1" :attributes="attributes"></Attributes>
-			<Characteristics class="tab-content" v-show="activetab==2" :characteristics="characteristics"></Characteristics>
+		<div class="form-content scrollbar" v-if="attributes.length > 0">
+			<Attributes v-show="activetab==1" :attributes="attributes"></Attributes>
+			<Characteristics v-show="activetab==2" :characteristics="characteristics"></Characteristics>
 		</div>
 	</div>
 </template>
@@ -307,9 +308,25 @@ function loadCharacteristics(characteristics, rules) {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.form-loader {
+	display: flex;
+	flex-direction: column;
+}
+.form-content {
+	min-height: 150px;
+	overflow-y: auto;
+	flex: 1;
+}
+.form-buttons {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 3px;
+}
+.form-buttons label { margin: 0; }
 .form-group { margin-bottom: 5px; width: 400px; }
 .tabs { margin-top: 10px; }
 .btn { margin-right: 10px; }
 .form-control-sm { width: 330px; }
-select.form-control-sm { width: 110px; padding-left: 0; margin-left: 10px;}
+select.form-control-sm { width: 10em; padding-left: 0; margin-left: 10px;}
 </style>

@@ -114,15 +114,14 @@ function sort(name, elem, default_dir) {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .rule-table {
-	max-height: calc(100vh - 50px);
-	max-width: calc(100vw - 440px); /* check c-filter and a-filter classes */
 	overflow: auto;
 	white-space: pre;
-	flex-grow: 1;
-	float: left;
+	flex: -1;
+	display: inline-block;
+	margin-right: 10px;
 }
 
-table { margin: 0; }
+table { margin: 0; display: inline-block; }
 table thead th {
 	/* Freeze */ position: sticky; top: 0; background-color: white; border: 0;
 	/* Link style */ cursor: pointer; text-decoration: underline;

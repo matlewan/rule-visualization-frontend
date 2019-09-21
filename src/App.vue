@@ -7,17 +7,15 @@
         <a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
         <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Visualization</a>
     </div>
-    <div class="content">
-        <FormLoader class='tab-content' v-show="activetab==1"></FormLoader>
-        <FilterTab  @apply="filterRules" @match="match" @setRule="setRule" class='tab-content' v-show="activetab==2" 
-                    :examples="examples" :filteredExamples="filteredExamples" :characteristics="characteristics" :attributes="attributes" 
+    <div id="app-content"><div>
+        <FormLoader v-show="activetab==1"></FormLoader>
+		<FilterTab  v-show="activetab==2 || activetab==4" @apply="filterRules" @match="match" @setRule="setRule" 
+					:examples="examples" :filteredExamples="filteredExamples" :characteristics="characteristics" :attributes="attributes" 
 					:ruleId="ruleId" :status="status">
-        </FilterTab>
-        <TableTab  	@setRule="setRule" class='tab-content' v-show="activetab==2" 
-					:rules="rules" :characteristics="characteristics"></TableTab>
-		<Statistics :attributes="attributes" :characteristics="characteristics" :rules="srcRules" v-show="activetab==3"></Statistics>
-        <div style="clear:both;"></div>
-    </div>
+		</FilterTab>
+		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
+		<Statistics v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="srcRules"></Statistics>
+    </div></div>
   </div>
 </template>
 
@@ -149,18 +147,39 @@ function matchRule(example, rule) {
 * { box-sizing: border-box; margin: 0; padding: 0; text-align: left; }
 
 /* Main div */
-.container {  
-	min-width: 420px;
+#app {  
+	min-width: 420px !important;
+	width: 100% !important;
 	max-width: 100% !important;
+	min-height: 100vh !important;
+	margin: 0 !important;
+	padding: 0 0 5px 15px !important;
 	font-size: 0.9em;
+	display: flex;
+	flex-direction: column;
 }
-.tab-content { margin-left: 10px; }
+#app-content {
+	position: relative;
+	flex: 1;
+}
+#app-content > div { 
+	position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+}
 
 /* Cards/tabs menu */
-.tabs { overflow: hidden; margin-bottom: 5px; width: 100%; }
+.tabs {
+	display: flex;
+	flex-direction: row;
+	margin: 0 20px 5px 0;
+	padding-left: 10px;
+	border-bottom: 1px #ccc solid;
+}
 .tabs a{
-	float: left; padding: 4px 24px;
-	cursor: pointer; border: 1px solid #ccc; border-right: none; background-color: #f1f1f1; font-weight: bold;
+	padding: 4px 24px;
+	cursor: pointer; border: 1px solid #ccc; border-right: none; border-bottom: none; background-color: #f1f1f1; font-weight: bold;
 }
 .tabs ul { list-style-type: none; margin-left: 20px; }
 .tabs a:last-child { border-right: 1px solid #ccc; }
