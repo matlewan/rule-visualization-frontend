@@ -67,9 +67,8 @@ export default {
 };
 
 function operator(op) {
-    if (op == ">=") return "\u2265";
-    else if (op == "<=") return "\u2264";
-    else return op;
+	var f = {">=": "\u2265", "<=": "\u2264", "==": "="};
+    return f[op] || op;
 }
 
 function conditionsToString(conditions) {
@@ -82,7 +81,6 @@ function conditionsToString(conditions) {
 }
 
 function decisionsToString(decisions) {
-	var x = 2;
     var decision = decisions[0][0];
     return decision.name + " " + operator(decision.operator) + " " 
                 + "<span class=\"rule-value\">" + decision.description + "</span>";

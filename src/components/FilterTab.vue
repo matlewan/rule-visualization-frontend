@@ -57,8 +57,8 @@
 		</table>
 	</div>
 	<div id="filter-options">
-		<button @click="reset" class="btn btn-primary">Reset</button>
-		<button @click="apply" class="btn btn-success">Apply</button>
+		<button @click="reset" class="btn btn-sm btn-primary">Reset</button>
+		<button @click="apply" class="btn btn-sm btn-success">Apply</button>
 	</div>
 </div>
 <div class='match' v-show="activesubtab==2">
@@ -97,7 +97,7 @@ export default {
                 }, {});
         },
     activeAttributes: function() {
-          return this.attributes.filter(a => a.dispFilter).sort( (a,b) => (a.type > b.type) ? -1 : (a.name < b.name) ? -1 : 1 );
+          return this.attributes.filter(a => a.dispFilter).sort( (a,b) => (a.type == b.type) ?  (a.name < b.name) : (a.type < b.type) ? -1 : 1 );
         }
   },
   components: {
