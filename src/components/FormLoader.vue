@@ -290,6 +290,22 @@ function loadCharacteristics(characteristics, rules) {
 			}
 		}
 	}
+	var n = rules.length, characteristicsDomain = {
+		'Confidence': {min: 0, max: 1},
+		'Coverage': {min: 0, max: n},
+		'CoverageFactor': {min: 0, max: 1},
+		'Epsilon': {min: 0, max: 1},
+		'EpsilonPrime': {min: 0, max: n*3},
+		'NegativeCoverage': {min: 0, max: n},
+		'Strength': {min: 0, max: 1},
+		'Support': {min: 0, max: n},
+		'AConfirmation': {min: -1, max: 1},
+		'C1Confirmation': {min: -3*n, max: 3*n},
+		'FConfirmation': {min: -1, max: 1},
+		'LConfirmation': {min: -3, max: 1},
+		'SConfirmation': {min: -1, max: 1},
+		'ZConfirmation': {min: -1, max: 1},
+	}
 	for (name in characteristics) {
 		var c = characteristics[name];
 		c.name = name;

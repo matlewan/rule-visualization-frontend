@@ -3,11 +3,12 @@
     <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
     <div class="tabs">
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Setup</a>
-        <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Data</a>
+        <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
         <a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
         <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Visualization</a>
 		<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
 		<div v-if="activetab == 4"><input type="checkbox" v-model="visualization"><label>Setup visualization</label></div>
+		<div>F11 Fullscreen</div>
     </div>
     <div id="app-content"><div>
         <FormLoader v-show="activetab==1"></FormLoader>
@@ -17,7 +18,7 @@
 		</FilterTab>
 		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
 		<Statistics ref="statistics" v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
-		<TheVisualization v-show="activetab==4" :attributes="activeConditionAttributes" :characteristics="characteristics" :rules="rules" :setup="visualization"></TheVisualization>
+		<TheVisualization v-show="activetab==4" :attributes="activeConditionAttributes" :characteristics="activeCharacteristics" :rules="rules" :setup="visualization"></TheVisualization>
     </div></div>
   </div>
 </template>
@@ -141,8 +142,11 @@ export default {
 		filter: this.srcRules.length != this.filteredRules.length,
 		match: this.filteredRules.length != this.rules.length
 	}},
-	activeAttributes: function() {
+	activeAttributes() {
 		return this.attributes.filter(a => a.active);
+	},
+	activeCharacteristics() {
+		return Object.keys(this.characteristics).map(name => this.characteristics[name]);
 	},
 	activeConditionAttributes() {
 		return this.activeAttributes.filter(a => a.type == 'condition')
@@ -195,8 +199,8 @@ export default {
 }
 .tabs > div { margin-left: 20px; }
 .tabs > div * { vertical-align: middle; }
-.tabs input { height: 20px; width: 20px; margin: 0 5px 0 20px;}
-.tabs label { margin: 0 5px 0 5px; font-size: 14px; font-weight: bold; }
+.tabs input { height: 20px; width: 20px; margin: 0 5px 0 5px;}
+.tabs label { margin: 0; font-size: 14px; font-weight: bold; }
 .tabs ul { list-style-type: none; margin-left: 20px; }
 .tabs a:first-child { border-left: 1px solid #ccc; }
 .tabs a:hover { background-color: #aaa; color: #fff; }
