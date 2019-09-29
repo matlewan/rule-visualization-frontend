@@ -2,15 +2,9 @@
 <div id="statistics-wrapper" class="scrollbar">
 	<div class="statistics-panel">
 		<button class="btn btn-sm btn-info" @click="compute">Recompute</button>
-		<!-- <div class="options">
-			<b>Union</b>
-			<select class="form-control-sm" v-model="unionName">
-				<option v-for="name in Object.keys(unions)" :value="name" :key="name">{{name}}</option>
-			</select>
-		</div> -->
-		<table class="table table-sm" v-if="union != undefined">
-			<tr><td>Rules</td><td>{{ union.count }}</td></tr>
-			<tr><td>Conditions per rule</td><td>{{ parseFloat((union.conditions / union.count).toPrecision(3)) }}</td></tr>
+		<table class="table table-sm" v-if="stats != undefined">
+			<tr><td>Rules</td><td>{{ stats.count }}</td></tr>
+			<tr><td>Conditions per rule</td><td>{{ parseFloat((stats.conditions / stats.count).toPrecision(3)) }}</td></tr>
 		</table>
 		<div class="options">
 			<b>Top attributes</b>
@@ -19,31 +13,31 @@
 				<option v-for="mode in attributeModes" :value="mode.value" :key="mode.value">{{mode.name}}</option>
 			</select>
 		</div>
-		<div class="scrollbar"><table class="table table-sm" v-if="union != undefined">
+		<div class="scrollbar"><table class="table table-sm" v-if="stats != undefined">
 			<template v-for="(value, name) in topAttributes">
 				<tr v-if="value.count > 0" :key="name">
 					<td @click="attributeName = name" class="pointer">{{ name }}</td>
 					<td class="nobreak" v-if="attributeMode == 'count'">
-						{{ value.count + ' (' + parseFloat((100 * value.count / union.count).toPrecision(3)) + '%)' }}
+						{{ value.count + ' (' + parseFloat((100 * value.count / stats.count).toPrecision(3)) + '%)' }}
 					</td>
 					<td v-if="attributeMode == 'count2'">
-						{{ parseFloat((value.count2 * union.conditions / (union.count * union.characteristics['Strength'])).toPrecision(3)) }}
+						{{ parseFloat((value.count2 * stats.count / (stats.characteristics['Strength'])).toPrecision(3)) }}
 					</td>
 				</tr>
 			</template>
 		</table></div>
 		<b>Average characteristics</b>
-		<div class="scrollbar"><table class="table table-sm" v-if="union != undefined">
-			<template v-for="(value, name) in union.characteristics">
+		<div class="scrollbar"><table class="table table-sm" v-if="stats != undefined">
+			<template v-for="(value, name) in stats.characteristics">
 				<tr v-if="characteristics[name].active" :key="name">
 					<td @click="characteristicName = name" class="pointer">{{ name }}</td>
-					<td>{{ parseFloat((value / union.count).toPrecision(3)) }}</td>
+					<td>{{ parseFloat((value / stats.count).toPrecision(3)) }}</td>
 				</tr>
 			</template>
 		</table></div>
 	</div>
 	<div class="statistics-panel">
-		<div class="scrollbar" v-if="union != undefined && this.attributeName != ''">
+		<div class="scrollbar" v-if="this.attributeName != ''">
 			<b>Domain</b>
 			<table class="table table-sm">
 				<tr v-for="point in crossPoints" :key="point.value">
@@ -54,15 +48,15 @@
 		</div>
 	</div>
 	<div class="statistics-panel">
-		<div v-if="union != undefined && this.attributeName != ''">
+		<div v-if="this.attributeName != ''">
 			<b>Domain of {{ this.attributeName }}</b>
 			<BaseChart v-if="attribute != undefined && attribute.domain != undefined" :data="crossPoints" :height="300" :width="400"></BaseChart>
 			<Histogram v-else :data="points" :height="300" :width="400"></Histogram>
 		</div>
-		<div v-if="unionCharacteristics.length > 0 && characteristicName != ''" class="histogram-wrapper scrollbar">
+		<div v-if="rulesCharacteristics.length > 0 && characteristicName != ''" class="histogram-wrapper scrollbar">
 			<b>Histogram of {{characteristicName}}</b><br>
 			<label>Buckets</label><input type="number" v-model.number="histogramBuckets">
-			<Histogram :data="unionCharacteristics" :height="300" :buckets="histogramBuckets"></Histogram>
+			<Histogram :data="rulesCharacteristics" :height="300" :buckets="histogramBuckets"></Histogram>
 		</div>
 	</div>
 	<div></div>
@@ -77,8 +71,7 @@ import BaseChart from './BaseChart.vue';
 export default {
   name: "Statistics",
   data() { return {
-	  unions: {},
-	  unionName: 'all',
+	  stats: {},
 	  attributeName: '',
 	  characteristicName: '',
 	  attributeMode: 'count',
@@ -98,21 +91,9 @@ export default {
 	  	attribute: function() {
 			return this.attributes.find(a => a.name == this.attributeName);
 		},
-		union: function() {
-			return this.unions[this.unionName];
-		},
-		unionRules: function() {
-			return this.unionName == 'all' ? this.rules : this.rules.filter(r => {
-				var d = r.decisions[0][0], union = this.union;
-				if (d.name != union.name || d.operator != union.operator) return false;
-				else if (union.operator == ">=" && union.value > d.value) return false;
-				else if (union.operator == "<=" && union.value < d.value) return false;
-				else if (union.operator != ">=" && union.operator != "<=") return (union.value == d.value);
-				else return true;
-			});
-		},
 		topAttributes: function() {
-			var myObj = this.union.attributes;
+			if (this.stats == undefined || this.stats.attributes == undefined) return undefined;
+			var myObj = this.stats.attributes;
 			return Object.keys(myObj).sort((a, b) => myObj[b][this.attributeMode]-myObj[a][this.attributeMode])
 				.reduce((_sortedObj, key) => ({
 				..._sortedObj, 
@@ -121,7 +102,7 @@ export default {
 		},
 		points: function() {
 			if (this.attribute == undefined) return [];
-			var conditions = this.unionRules.map(r => r.conditions).reduce( (c1,c2) => c1.concat(c2), []).filter(c => c.name == this.attribute.name)
+			var conditions = this.rules.map(r => r.conditions).reduce( (c1,c2) => c1.concat(c2), []).filter(c => c.name == this.attribute.name)
 			return conditions.sort( (a,b) => a.value - b.value).map(c => c.description).filter(v => v != undefined);
 		},
 		crossPoints: function() {
@@ -136,73 +117,43 @@ export default {
 			}
 			return groups.sort( (a,b) => a.value - b.value );
 		},
-		unionCharacteristics: function() {
-			return this.unionRules.map(r => r.characteristics[this.characteristicName]).filter(v => v != "undefined");
+		rulesCharacteristics: function() {
+			return this.rules.map(r => r.characteristics[this.characteristicName]).filter(v => v != "undefined");
 		}
   },
   watch: {
 	  rules: function() { this.compute(); }
   },
   methods: {
-	newUnion(d) {
-		var union = ({ name: d.name, operator: d.operator, value: d.value, description: d.description,
-			count: 0, conditions: 0, 
+	newStats() {
+		var stats = ({ count: 0, conditions: 0, 
 			attributes: {}, characteristics: {} 
 		});
 		for (var name in this.characteristics)
-			union.characteristics[name] = 0;
+			stats.characteristics[name] = 0;
 		for (var a of this.attributes)
-			union.attributes[a.name] = {count: 0, count2: 0};
-		return union;
-	},
-	add(union, oldUnion) {   // result in union
-		union.count += oldUnion.count;
-		union.conditions += oldUnion.conditions
-		for (var cKey in union.characteristics)
-			union.characteristics[cKey] += oldUnion.characteristics[cKey];
-		for (var aKey in union.attributes) {
-			union.attributes[aKey].count += oldUnion.attributes[aKey].count;
-			union.attributes[aKey].count2 += oldUnion.attributes[aKey].count2;
-		}
-	},
-	merge(unions, keys) { // unions should be sorted
-		var oldUnion = this.newUnion({});
-		for (var u of keys) {
-			this.add(unions[u], oldUnion);
-			oldUnion = unions[u];
-		}
+			stats.attributes[a.name] = {count: 0, count2: 0};
+		return stats;
 	},
 	operator(op) {
 		var f = {">=": "\u2265", "<=": "\u2264", "==": "="};
 		return f[op] || op;
 	},
 	compute() {
-		var union, unions = {};
+		var stats = this.newStats();
 		for (var rule of this.rules) {
-			var d = rule.decisions[0][0], u = d.name + ' ' + this.operator(d.operator) + ' ' + d.description;
-			union = unions[u] = (unions[u] || this.newUnion(d));
-			union.count += 1;
-			union.conditions += rule.conditions.length;
+			stats.count += 1;
+			stats.conditions += rule.conditions.length;
 			for (var cKey in rule.characteristics) {
 				if (this.characteristics[cKey] == undefined) continue;
-				union.characteristics[cKey] += rule.characteristics[cKey];
+				stats.characteristics[cKey] += rule.characteristics[cKey];
 			}
 			for (var c of rule.conditions) {
-				union.attributes[c.name].count += 1;
-				union.attributes[c.name].count2 += (union.characteristics['Strength'] == undefined ? 1 : union.characteristics['Strength'])
+				stats.attributes[c.name].count += 1;
+				stats.attributes[c.name].count2 += (rule.characteristics['Strength'] || 1);
 			}
 		}
-		
-		var all = this.newUnion({name: 'all', operator: '', description: ''});
-		for (var u in unions)
-			this.add(all, unions[u]);
-		var upUnions = Object.keys(unions).filter(u => unions[u].operator === ">=").sort( (a,b) => unions[b].value - unions[a].value );
-		var downUnions = Object.keys(unions).filter(u => unions[u].operator === "<=").sort( (a,b) => unions[a].value - unions[b].value );
-		this.merge(unions, upUnions);
-		this.merge(unions, downUnions);
-		unions['all'] = all;
-
-		Vue.set(this, 'unions', unions);
+		Vue.set(this, 'stats', stats);
 	}
   },
 	components: {

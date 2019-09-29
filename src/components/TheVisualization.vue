@@ -44,10 +44,6 @@
 			:sizeType="matrixOptions.sizeType" :valueType="matrixOptions.valueType" :contrast="matrixOptions.contrast / 10"
 			:cellSize="matrixOptions.cellSize">
 		</CoocurenceMatrix>
-		<CoocurenceMatrix v-if="type=='M'" :matrix="rulesMatrix" :labels="rulesNames" :weights="rulesWeights"
-			:sizeType="matrixOptions.sizeType" :valueType="matrixOptions.valueType" :contrast="matrixOptions.contrast / 10"
-			:cellSize="matrixOptions.cellSize">
-		</CoocurenceMatrix>
 	</div>
 </template>
 
@@ -95,29 +91,8 @@ export default {
 			}
 			return matrix;
 		},
-		characteristicsNames() {
-			return this.characteristics.map(c => c.name);
-		},
-		rulesNames() {
-			return this.rules.map(r => 'Rule #' + r.id);
-		},
-		rulesWeights() {
-			var n = this.rules.length;
-			return this.rules.map( r => n*n*r.characteristics[this.matrixOptions.ruleWeight]);
-		},
-		rulesMatrix() {
-			var matrix = new Array(this.rules.length).fill(new Array(this.rules.length).fill(0));
-			var n = this.rules.length;
-			for (var i = 0; i < n; i++)
-			for (var j = 0; j < n; j++) {
-				var value = i+j;
-				matrix[i][j] = value;
-			}
-			return matrix;
-		}
 	},
 	methods: {
-		getCharacteristic(name) { return this.characteristics.find(c => c.name == name); },
 	},
 	components: {
 		CoocurenceMatrix, VueSlider
