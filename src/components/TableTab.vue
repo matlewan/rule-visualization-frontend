@@ -5,7 +5,7 @@
                 <tr>
                     <th @click="sort('id', $event.target, 'asc')">ID<span /></th>
                     <th @click="sort('conditions', $event.target, 'asc')">Conditions<span />
-						<img @click="multiLine = !multiLine" style="float: right;" height="20px" src="/multiline.png" alt="multiline icon">
+						<img @click="flipMultiLine" style="float: right;" height="20px" src="/multiline.png" alt="multiline icon">
 					</th>
                     <th @click="sort('decision', $event.target, 'asc')">Decision<span /></th>
                     <th v-for="(value, name) in dispCharacteristics" :key="value.id" @click="sort(name, $event.target, 'desc')">{{ value.dispName }}<span /></th>
@@ -49,9 +49,7 @@ export default {
         },
         dispRules: function() {
             var c = this;
-            if (this.orderby == '') 
-                return this.rules;
-            else if (this.orderby == 'id')
+            if (this.orderby == '' || this.orderby == 'id')
                 return _.orderBy(this.rules, function(e) { return e.id }, [c.orderby_dir]);
             else if (this.orderby == 'conditions')
                 return _.orderBy(this.rules, function(e) { return e.conditions.length }, [c.orderby_dir]);
@@ -65,7 +63,11 @@ export default {
       VueSlider
   },
   methods: {
-      conditionsToString, decisionsToString, round, sort, setRule
+	  conditionsToString, decisionsToString, round, sort, setRule,
+	  flipMultiLine(e) {
+		  this.multiLine = !this.multiLine;
+		  e.stopPropagation();
+	  } 
   } 
 };
 
