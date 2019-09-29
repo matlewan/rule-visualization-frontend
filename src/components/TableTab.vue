@@ -4,7 +4,9 @@
             <thead>
                 <tr>
                     <th @click="sort('id', $event.target, 'asc')">ID<span /></th>
-                    <th @click="sort('conditions', $event.target, 'asc')">Conditions<span /></th>
+                    <th @click="sort('conditions', $event.target, 'asc')">Conditions<span />
+						<img @click="multiLine = !multiLine" style="float: right;" height="20px" src="/multiline.png" alt="multiline icon">
+					</th>
                     <th @click="sort('decision', $event.target, 'asc')">Decision<span /></th>
                     <th v-for="(value, name) in dispCharacteristics" :key="value.id" @click="sort(name, $event.target, 'desc')">{{ value.dispName }}<span /></th>
                 </tr>
@@ -33,6 +35,7 @@ export default {
       characteristics: Object
   },
   data: function() { return {
+	  multiLine: true,
       orderby: '',
       orderby_dir: 'asc'
   }},
@@ -72,9 +75,9 @@ function operator(op) {
 }
 
 function conditionsToString(conditions) {
-    var result = "";
+    var result = "", joinSign = (this.multiLine ? '\n' : ', ');
     for (var condition of conditions) {
-        result += "\n" + condition.name + " " + operator(condition.operator) + " " 
+        result += joinSign + condition.name + " " + operator(condition.operator) + " " 
                 + "<span class=\"rule-value\">" + condition.description + "</span>";
     }
     return result.substr(1);
