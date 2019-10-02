@@ -44,22 +44,29 @@
 			:sizeType="matrixOptions.sizeType" :valueType="matrixOptions.valueType" :contrast="matrixOptions.contrast / 10"
 			:cellSize="matrixOptions.cellSize">
 		</CoocurenceMatrix>
+		<RulesGraph>
+			
+		</RulesGraph>
+		
 	</div>
 </template>
 
 <script>
-import VueSlider from 'vue-slider-component'
-import CoocurenceMatrix from "./CoocurenceMatrix.vue"
+import VueSlider from 'vue-slider-component';
+import CoocurenceMatrix from "./CoocurenceMatrix.vue";
+import RulesGraph from "./RulesGraph.vue";
 export default {
 	name: "TheVisualization",
 	props: {
 		attributes: Array,
 		rules: Array,
+		srcRules: Array,
 		characteristics: Array,
+		examples: Array,
 		setup: Boolean,
 	},
 	data() { return {
-		matrixOptions: {
+		matrixOptions: { // attributes matrix options
 			valueType: 'P', // P - percentage (coocurences divided by attribute count), C - count
 			contrast: 10,
 			sizeType: 'F', // F - fixed, D - dynamic
@@ -67,8 +74,22 @@ export default {
 			ruleWeight: ''
 		},
 		type: 'A',
+		alpha: 0.4, beta: 0.4, gamma: 0.2,
+		similarityMatrix: [],
+		links: []
 	}},
 	computed: {
+		domains() {
+			var attr = {};
+			for (var a of this.attributes) {
+				attr[a.name] = {
+					min: a.min,
+					max: a.max,
+					length: (a.domain != undefined) ? a.domain.length : a.max - a.min,
+				}
+			}
+			return attr;
+		},
 		attributesNames() {
 			return this.attributes.map(a => a.name);
 		},
@@ -93,9 +114,77 @@ export default {
 		},
 	},
 	methods: {
+		semanticSimilarity(r1, r2) {
+			var similarity = 0;
+			var conditions = r1.conditions.concat(r2.conditions)
+				.sort( (a,b) => (a.name < b.name ? -1 : 1) );
+			for (var i = 1; i < conditions.length; i++) {
+				if (c1.name == c2.name) {
+					var len = domains[c1.name].length;
+					var value = alpha + (1-alpha) * Math.abs(c2.value - c1.value) / len;
+					similarity += value;
+					i++;
+				}				
+			}
+			return (2 * similarity) / (similarity + 0.5 * conditions.length);
+		},
+		coverageSimilarity(r1, r2) {
+			var union = new Set(...r1.__examples, ...r2.__examples);
+			var intersectionSize = r1.__examples.length + r1.__examples.length - union.length;
+			return intersectionSize / union.length; // Jaccard measure
+		},
+		computeLinks() {
+			var idx = this.rules.map(r => r.id-1), n = idx.length;
+			var set = new Set(idx);
+			var matrix = [];
+			var rows = this.similarityMatrix.filter((_, index) => set.has(index));
+			for (var i = 0; i < n; i++) {
+				matrix.push(rows[i].filter((_, index) => set.has(index)));
+			}
+			this.filteredSimilarityMatrix = matrix;
+		},
+		computeSrcLinks() {
+			var matrix = []; // pseudo matrix (half matrix)
+			var rules = this.srcRules, n = rules.length;
+			for (var i = 0; i < n; i++) {
+				matrix.push(new Array(n-i).fill({semantic: 0, coverage: 0}));
+				rules.coverage = 0;
+			}
+			this.computeSemanticSimilarityMatrix(matrix, n);
+			this.computeCoverage(matrix, n, rules);
+			this.computeLinks();
+		},
+		computeSemanticSimilarityMatrix(matrix, n) {
+			for (var i = 0; i < n; i++) {
+			for (var j = i+1; j < n; j++) {
+				matrix[i][j].semantic = this.semanticSimilarity(rules[i], rules[j]);
+			}}
+		},
+		computeCoverage(matrix, n, rules) {
+			for (var r of rules)
+				r.__examples = new Set();
+			for (var i = 0; i < this.examples.length; i++) {
+				for (var ruleId of this.examples[i].__rules) {
+					r.__examples.add(i);
+				}
+			}
+			
+			for (var i = 0; i < n; i++) {
+				var r1 = rules[i], n1 = r1.examples.length;
+				r1.coverage = n1;
+				for (var j = i+1; j < n; j++) {
+					var r2 = rules[j], n2 = r2.examples.length;
+					var union = new Set(...r1.examples, ...r2.examples);
+					var intersection = n1 + n2 - union.length;
+					matrix[i][j].coverage = intersection / union.length; // Jaccard measure
+				}
+			}
+			for (var r of rules)
+				r.__examples = undefined;
+		},
 	},
 	components: {
-		CoocurenceMatrix, VueSlider
+		CoocurenceMatrix, VueSlider, RulesGraph
 	}
 }
 </script>
@@ -103,6 +192,13 @@ export default {
 <style scoped>
 .visualization {
 	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	margin: 0 10px 5px 0;
+}
+.setup-table {
+	width: 300px;
 }
 .setup-table td,th { padding: 5px; }
 </style>
