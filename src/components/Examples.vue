@@ -1,7 +1,10 @@
 <template>
     <div v-show="attributes.length > 0" style="float: left;">
-    <h5>Examples</h5>
-    <div class="examples scrollbar">
+	<div class="d-flex flex-row">
+		<h5>Examples</h5>
+		<img width="25px" height="25px" src="/help.png" alt="help icon" data-toggle="tooltip" title="Click on rule to display only covered examples by this rule.">
+    </div>
+	<div class="examples scrollbar">
         <table class="table table-sm">
             <tbody>
                 <tr v-for="e in filteredExamples" :key="e.__idx">
@@ -161,7 +164,6 @@ function attr(name) {
     }
     .examples {
         max-height:15vh;
-        margin-top: 10px;
         cursor: pointer;
     }
     .example {

@@ -1,5 +1,5 @@
 <template>
-	<div class="histogram">
+	<div :class="divClass">
 
 	</div>
 </template>
@@ -14,7 +14,8 @@ export default {
 		height:  { type: Number, default: 500 },
 		buckets: { type: Number, default: 10 },
 		margin:  { type: Number, default: 25 },
-		color:	 { type: String, default: "#69b3a2"}
+		color:	 { type: String, default: "#69b3a2"},
+		divClass: String,
 	},
 	data() { return {
 		
@@ -31,11 +32,12 @@ export default {
 		this.generate();
 	},
 	computed: {
-		max() { return this.data.reduce( (a,b) => a > b ? a : b); }
+		max() { return this.data.reduce( (a,b) => a > b ? a : b); },
+		class() { return '.' + this.divClass; }
 	},
 	methods: {
 		drop() {
-			d3.select(".histogram").select("*").remove();
+			d3.select(this.class).select("*").remove();
 		},
 		generate() {
 			this.drop();
@@ -43,7 +45,7 @@ export default {
 			var margin = {top: this.margin, right: this.margin, bottom: this.margin, left: this.margin};
 			var width = this.width - margin.left - margin.right;
 			var height = this.height - margin.top - margin.bottom;
-			var svg = d3.select(".histogram")
+			var svg = d3.select(this.class)
 				.append("svg")
 					.attr("width", width + margin.left + margin.right)
 					.attr("height", height + margin.top + margin.bottom)

@@ -5,11 +5,10 @@
 				<th>Visualization</th>
 				<th><select v-model="type">
 					<option value="A">Attributes matrix</option>
-					<option value="M">Rules matrix</option>
 					<option value="R">Rules graph</option>
 				</select></th>
 			</tr>
-			<template v-if="type == 'A' || type == 'M'">
+			<template v-if="type == 'A'">
 				<tr>
 					<td>Contrast</td>
 					<td><vue-slider class="slider" :silent="true" v-model="matrixOptions.contrast" :max="20" :min="1" :interval="1"/></td>
@@ -32,21 +31,17 @@
 						<option value="D">Weighted</option>
 					</select></td>
 				</tr>
-				<tr v-if="type=='M' && matrixOptions.sizeType == 'D'">
-					<td>Rule weight</td>
-					<td><select v-model="matrixOptions.ruleWeight">
-						<option v-for="c in characteristics" :key="c.name" :value="c.name">{{c.name}}</option>
-					</select></td>
-				</tr>
 			</template>
 		</table>
 		<CoocurenceMatrix v-if="type=='A'" :matrix="attributesMatrix" :labels="attributesNames" :weights="attributesWeights"
 			:sizeType="matrixOptions.sizeType" :valueType="matrixOptions.valueType" :contrast="matrixOptions.contrast / 10"
 			:cellSize="matrixOptions.cellSize">
 		</CoocurenceMatrix>
-		<RulesGraph>
+		<div id="graph" v-if="type=='R'" >
+			<RulesGraph :nodes="nodes" :links="links" :setup="setup" :characteristics="characteristics">
 			
-		</RulesGraph>
+			</RulesGraph>
+		</div>
 		
 	</div>
 </template>
@@ -73,12 +68,35 @@ export default {
 			cellSize: 45,
 			ruleWeight: ''
 		},
-		type: 'A',
-		alpha: 0.4, beta: 0.4, gamma: 0.2,
-		similarityMatrix: [],
-		links: []
+		type: 'R',
+		srcLinksAtMost: [],
+		srcLinksAtLeast: [],
+		semanticSimilarityThreshold: 0, // should be the same as minimum value in RulesGraph.vue semantic filter
+		coverageSimilarityThreshold: 0, // should be the same as minimum value in RulesGraph.vue semantic filter
 	}},
 	computed: {
+		links() {
+			return this.srcLinksAtMost.filter(link => {
+				return link.coverage >= this.coverageSimilarityThreshold && link.semantic >= this.semanticSimilarityThreshold;
+			});
+		},
+		nodes() {
+			return this.rulesAtMost;
+		},
+		rulesAtLeast() {
+			return this.srcRules.filter( (rule) => {
+				var decision = rule.decisions[0][0];
+				var attribute = this.attributes.find(a => a.name == decision.name);
+				return (attribute.type == 'gain') == (decision.operator == '>=')
+			});
+		},
+		rulesAtMost() {
+			return this.srcRules.filter( (rule) => {
+				var decision = rule.decisions[0][0];
+				var attribute = this.attributes.find(a => a.name == decision.name);
+				return (attribute.type == 'gain') != (decision.operator == '>=')
+			});
+		},
 		domains() {
 			var attr = {};
 			for (var a of this.attributes) {
@@ -115,73 +133,63 @@ export default {
 	},
 	methods: {
 		semanticSimilarity(r1, r2) {
-			var similarity = 0;
+			var similarity = 0, alpha = 0.5, pairs = 0;
 			var conditions = r1.conditions.concat(r2.conditions)
 				.sort( (a,b) => (a.name < b.name ? -1 : 1) );
 			for (var i = 1; i < conditions.length; i++) {
+				var c1 = conditions[i-1], c2 = conditions[i];
 				if (c1.name == c2.name) {
-					var len = domains[c1.name].length;
-					var value = alpha + (1-alpha) * Math.abs(c2.value - c1.value) / len;
+					var len = this.domains[c1.name].length;
+					var value = 1 - alpha * Math.abs(c2.value - c1.value) / len;
 					similarity += value;
-					i++;
+					i++; pairs++;
 				}				
 			}
-			return (2 * similarity) / (similarity + 0.5 * conditions.length);
+			return 2 * similarity / conditions.length;
 		},
 		coverageSimilarity(r1, r2) {
-			var union = new Set(...r1.__examples, ...r2.__examples);
-			var intersectionSize = r1.__examples.length + r1.__examples.length - union.length;
-			return intersectionSize / union.length; // Jaccard measure
-		},
-		computeLinks() {
-			var idx = this.rules.map(r => r.id-1), n = idx.length;
-			var set = new Set(idx);
-			var matrix = [];
-			var rows = this.similarityMatrix.filter((_, index) => set.has(index));
-			for (var i = 0; i < n; i++) {
-				matrix.push(rows[i].filter((_, index) => set.has(index)));
-			}
-			this.filteredSimilarityMatrix = matrix;
+			if (r1.__examples.size == 0 || r2.__examples.size == 0)
+				return 0;
+			var union = new Set([...r1.__examples, ...r2.__examples]);
+			var intersectionSize = r1.__examples.size + r2.__examples.size - union.size;
+			return intersectionSize / union.size; // Jaccard measure
 		},
 		computeSrcLinks() {
-			var matrix = []; // pseudo matrix (half matrix)
-			var rules = this.srcRules, n = rules.length;
-			for (var i = 0; i < n; i++) {
-				matrix.push(new Array(n-i).fill({semantic: 0, coverage: 0}));
-				rules.coverage = 0;
-			}
-			this.computeSemanticSimilarityMatrix(matrix, n);
-			this.computeCoverage(matrix, n, rules);
-			this.computeLinks();
+			this.fillRuleExamples();
+			this.srcLinksAtLeast = this.srcLinks(this.rulesAtLeast);
+			this.srcLinksAtMost = this.srcLinks(this.rulesAtMost);
+			this.dropRuleExamples();
 		},
-		computeSemanticSimilarityMatrix(matrix, n) {
+		srcLinks(rules) {
+			var links = [], n = rules.length;
 			for (var i = 0; i < n; i++) {
 			for (var j = i+1; j < n; j++) {
-				matrix[i][j].semantic = this.semanticSimilarity(rules[i], rules[j]);
+				var semantic = this.semanticSimilarity(rules[i], rules[j]);
+				var coverage = this.coverageSimilarity(rules[i], rules[j]);
+				if (semantic >= this.semanticSimilarityThreshold || coverage >= this.coverageSimilarityThreshold) {
+					links.push({'source': rules[i].id, 'target': rules[j].id, 'semantic': semantic, 'coverage': coverage});
+				}
 			}}
+			return links;
 		},
-		computeCoverage(matrix, n, rules) {
-			for (var r of rules)
+		fillRuleExamples() {
+			for (var r of this.srcRules)
 				r.__examples = new Set();
 			for (var i = 0; i < this.examples.length; i++) {
 				for (var ruleId of this.examples[i].__rules) {
-					r.__examples.add(i);
+					this.srcRules[ruleId].__examples.add(i);
 				}
 			}
-			
-			for (var i = 0; i < n; i++) {
-				var r1 = rules[i], n1 = r1.examples.length;
-				r1.coverage = n1;
-				for (var j = i+1; j < n; j++) {
-					var r2 = rules[j], n2 = r2.examples.length;
-					var union = new Set(...r1.examples, ...r2.examples);
-					var intersection = n1 + n2 - union.length;
-					matrix[i][j].coverage = intersection / union.length; // Jaccard measure
-				}
-			}
-			for (var r of rules)
+		},
+		dropRuleExamples() {
+			for (var r of this.srcRules)
 				r.__examples = undefined;
 		},
+	},
+	watch: {
+		srcRules: function() {
+			this.computeSrcLinks();
+		}
 	},
 	components: {
 		CoocurenceMatrix, VueSlider, RulesGraph
@@ -201,4 +209,10 @@ export default {
 	width: 300px;
 }
 .setup-table td,th { padding: 5px; }
+
+#graph {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
 </style>

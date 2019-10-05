@@ -220,7 +220,7 @@ function loadExamples(data) {
 }
 function loadMatching(examples, pairs) {
 	for (var i = 0; i < examples.length; i++) {
-		examples[i].__rules = pairs[i].rules;
+		examples[i].__rules = new Set(pairs[i].rules);
 	}
 }
 function loadRules(data) {

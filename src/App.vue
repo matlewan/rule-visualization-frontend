@@ -7,7 +7,7 @@
         <a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
         <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Visualization</a>
 		<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
-		<div v-if="activetab == 4"><input type="checkbox" v-model="visualization"><label>Setup visualization</label></div>
+		<div v-if="activetab == 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
 		<div>F11 Fullscreen</div>
     </div>
     <div id="app-content"><div>
@@ -18,7 +18,7 @@
 		</FilterTab>
 		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
 		<Statistics ref="statistics" v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
-		<TheVisualization v-show="activetab==4" :attributes="activeConditionAttributes" :characteristics="activeCharacteristics" :rules="rules" :setup="visualization"></TheVisualization>
+		<TheVisualization v-show="activetab==4" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></TheVisualization>
     </div></div>
   </div>
 </template>
@@ -125,7 +125,7 @@ export default {
 	}, 
 	matchRule(example, rule) {
 		if (example.__rules == undefined) return false;
-		else return example.__rules.indexOf(rule.id-1) >= 0;
+		else return example.__rules.has(rule.id-1);
 	},
   },
   components: {
@@ -146,7 +146,7 @@ export default {
 		return this.attributes.filter(a => a.active);
 	},
 	activeCharacteristics() {
-		return Object.keys(this.characteristics).map(name => this.characteristics[name]);
+		return Object.keys(this.characteristics).filter(name => this.characteristics[name].active).map(name => this.characteristics[name]);
 	},
 	activeConditionAttributes() {
 		return this.activeAttributes.filter(a => a.type == 'condition')

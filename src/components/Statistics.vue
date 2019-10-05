@@ -51,12 +51,12 @@
 		<div v-if="this.attributeName != ''">
 			<b>Domain of {{ this.attributeName }}</b>
 			<BaseChart v-if="attribute != undefined && attribute.domain != undefined" :data="crossPoints" :height="300" :width="400"></BaseChart>
-			<Histogram v-else :data="points" :height="300" :width="400"></Histogram>
+			<Histogram v-else :data="points" :height="300" :width="400" :divClass="'attribute-histogram'"></Histogram>
 		</div>
 		<div v-if="rulesCharacteristics.length > 0 && characteristicName != ''" class="histogram-wrapper scrollbar">
 			<b>Histogram of {{characteristicName}}</b><br>
 			<label>Buckets</label><input type="number" v-model.number="histogramBuckets">
-			<Histogram :data="rulesCharacteristics" :height="300" :buckets="histogramBuckets"></Histogram>
+			<Histogram :data="rulesCharacteristics" :height="300" :buckets="histogramBuckets" :divClass="'characteristic-histogram'"></Histogram>
 		</div>
 	</div>
 	<div></div>
@@ -179,8 +179,7 @@ export default {
 .statistics-panel {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
-	flex: 0;
+	flex: -1;
 	margin-left: 17px;
 }
 .statistics-panel > .scrollbar {
