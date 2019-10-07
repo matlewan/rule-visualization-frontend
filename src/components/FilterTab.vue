@@ -24,10 +24,10 @@
 	<div id="attribute-options">
 		<input @click="checkAll" type="checkbox" name="all" id="all"><label for="all">All</label>
 		<label style="margin: 0 10px 0 20px;" for="aOperator">Join operator: </label>
-		<select class="form-control-sm" v-model="aOperator" name="aOperator">
-			<option value="OR">or</option>
-			<option value="AND">and</option>
-		</select>
+		<input id = "FT-or" type="radio" :value="'OR'" v-model="aOperator">
+		<label for="FT-or">or</label>
+		<input id = "FT-and" type="radio" :value="'AND'" v-model="aOperator" style="margin-left: 10px">
+		<label for="FT-and">and</label>
 	</div>
 	<div class="a-filter scrollbar">
 		<table class="table table-sm">

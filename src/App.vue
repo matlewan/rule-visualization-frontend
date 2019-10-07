@@ -5,9 +5,10 @@
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Setup</a>
         <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
         <a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
-        <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Visualization</a>
+        <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Attributes</a>
+        <a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Graph</a>
 		<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
-		<div v-if="activetab == 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
+		<div v-if="activetab >= 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
 		<div>F11 Fullscreen</div>
     </div>
     <div id="app-content"><div>
@@ -18,7 +19,8 @@
 		</FilterTab>
 		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
 		<Statistics ref="statistics" v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
-		<TheVisualization v-show="activetab==4" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></TheVisualization>
+		<AttributesMatrix v-show="activetab==4" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></AttributesMatrix>
+		<RulesGraph v-show="activetab==5" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></RulesGraph>
     </div></div>
   </div>
 </template>
@@ -28,7 +30,8 @@ import FormLoader from "./components/FormLoader.vue";
 import FilterTab from "./components/FilterTab.vue";
 import TableTab from  "./components/TableTab.vue";
 import Statistics from  "./components/Statistics.vue";
-import TheVisualization from  "./components/TheVisualization.vue";
+import AttributesMatrix from  "./components/AttributesMatrix.vue";
+import RulesGraph from "./components/RulesGraph.vue";
 
 export default {
   name: "app",
@@ -129,7 +132,7 @@ export default {
 	},
   },
   components: {
-    FormLoader, FilterTab, TableTab, Statistics, TheVisualization
+    FormLoader, FilterTab, TableTab, Statistics, AttributesMatrix, RulesGraph
   },
   computed: {
 	filteredExamples: function(ruleId) {
