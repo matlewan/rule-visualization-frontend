@@ -261,7 +261,7 @@ function isNumeric(n) {
 function loadAttributesMinMaxRange(attributes, rules) {
 	var allConditions = [];
 	for (var rule of rules)
-		allConditions.push(...rule.conditions, ...rule.decisions.flat());
+		allConditions.push(...rule.conditions, ...rule.decisions.flatMap(x => x));
 	
 	var numericAttributes = attributes.filter(a => a.active && a.domain == undefined && a.identifierType == undefined);
 	var numericAttributesNames = numericAttributes.map(a => a.name);
