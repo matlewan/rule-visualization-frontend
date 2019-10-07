@@ -5,7 +5,7 @@
                 <tr>
                     <th @click="sort('id', $event.target, 'asc')">ID<span /></th>
                     <th @click="sort('conditions', $event.target, 'asc')">Conditions<span />
-						<img @click="flipMultiLine" style="float: right;" height="20px" src="/multiline.png" alt="multiline icon">
+						<img @click="flipMultiLine" style="float: right;" height="20px" src="/img/multiline.png" alt="multiline icon">
 					</th>
                     <th @click="sort('decision', $event.target, 'asc')">Decision<span /></th>
                     <th v-for="(value, name) in dispCharacteristics" :key="value.id" @click="sort(name, $event.target, 'desc')">{{ value.dispName }}<span /></th>

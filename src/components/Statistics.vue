@@ -8,7 +8,7 @@
 		</table>
 		<div class="options">
 			<b>Top attributes</b>
-			<img width="25px" src="/help.png" alt="help icon" data-toggle="tooltip" :title="tooltipMsg">
+			<img width="25px" src="/img/help.png" alt="help icon" data-toggle="tooltip" :title="tooltipMsg">
 			<select class="form-control-sm" v-model="attributeMode" >
 				<option v-for="mode in attributeModes" :value="mode.value" :key="mode.value">{{mode.name}}</option>
 			</select>

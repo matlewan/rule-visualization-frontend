@@ -67,7 +67,7 @@
 				<td></td>
 				<td v-html="decisionsToString(rule.decisions)"></td>
 			</tr></table>
-			<img v-else width="25px" src="/help.png" alt="help icon" data-toggle="tooltip" 
+			<img v-else width="25px" src="/img/help.png" alt="help icon" data-toggle="tooltip" 
 				:title="'Click on node in Read mode to display detail informations about node.'">
 		</div>
 	</div>
