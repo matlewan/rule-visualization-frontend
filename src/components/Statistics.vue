@@ -1,14 +1,15 @@
 <template>
 <div id="statistics-wrapper" class="scrollbar">
 	<div class="statistics-panel">
-		<button class="btn btn-sm btn-info" @click="compute">Recompute</button>
+		<!-- <button class="btn btn-sm btn-info" @click="compute">Recompute</button> -->
+		<h5>Statistics</h5>
 		<table class="table table-sm" v-if="stats != undefined">
 			<tr><td>Rules</td><td>{{ stats.count }}</td></tr>
 			<tr><td>Conditions per rule</td><td>{{ parseFloat((stats.conditions / stats.count).toPrecision(3)) }}</td></tr>
 		</table>
 		<div class="options">
 			<b>Top attributes</b>
-			<img width="25px" src="/img/help.png" alt="help icon" data-toggle="tooltip" :title="tooltipMsg">
+			<img width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" :title="tooltipMsg">
 			<select class="form-control-sm" v-model="attributeMode" >
 				<option v-for="mode in attributeModes" :value="mode.value" :key="mode.value">{{mode.name}}</option>
 			</select>

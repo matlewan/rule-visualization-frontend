@@ -40,14 +40,14 @@ export default {
 			return this.srcRules.filter( (rule) => {
 				var decision = rule.decisions[0][0];
 				var attribute = this.attributes.find(a => a.name == decision.name);
-				return (attribute.type == 'gain') == (decision.operator == '>=')
+				return (attribute.preferenceType == 'gain') == (decision.operator == '>=');
 			});
 		},
 		rulesAtMost() {
 			return this.srcRules.filter( (rule) => {
 				var decision = rule.decisions[0][0];
 				var attribute = this.attributes.find(a => a.name == decision.name);
-				return (attribute.type == 'gain') != (decision.operator == '>=')
+				return (attribute.preferenceType == 'gain') != (decision.operator == '>=')
 			});
 		},
 		domains() {

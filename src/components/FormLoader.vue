@@ -1,6 +1,10 @@
 <template>
 	<div class="form-loader">
 		<form style="max-width: 500px;">
+			<div class="form-group input-group col-xs-12">
+				<label>URL server</label>
+				<input class="input form-control-sm" v-model="serverUrl">
+			</div>
 			<div class="form-group">
 				<input type="file" class="file" id="attributes" style="display: none;" @change="setAttributes" />
 				<div class="input-group col-xs-12">
@@ -30,8 +34,7 @@
 			<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
 			<label>Demo: </label>
 			<select v-model="demoFolder" class="form-control-sm">
-				<option value="prioritisation">Prioritisation</option>
-				<option value="windsor">Windsor</option>
+				<option v-for="demo in demoList" :value="demo" :key="demo">{{ demo }}</option>
 			</select>
 			<a id="download" style="display:none;"></a>
 		</div>
@@ -58,11 +61,21 @@ export default {
 			activetab: 1,
 			files: {},
 			demoFolder: 'prioritisation',
+			serverUrl: 'http://localhost:8081',
+			demoList: ['prioritisation', 'windsor'],
 		};
 	},
 	methods: { 
-		setAttributes, setRules, setExamples, browseAttributes, browseRules, browseExamples, 
-		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob, load, preprocessing
+		setAttributes, setRules, setExamples, browseAttributes, browseRules, browseExamples, getAPI,
+		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob, load, preprocessing,
+		getDemoList() {
+			let component = this;
+			let path = this.serverUrl + '/demo';
+			fetch(path, { method: "GET" }).then( response => response.json() ).then(response => {
+				component.demoList = response;
+				component.demoFolder = component.demoList[0];
+			});
+		}
 	},
 	components: { Attributes, Characteristics },
 	computed: {
@@ -73,10 +86,11 @@ export default {
 	mounted: function() {
 		this.$root.$on('updateExamples', () => { this.update(); }); 
 		this.$root.$on('downloadExamples', () => { this.downloadExamples(); }); 
+		this.getDemoList();
 	}
 };
 var tmp_filename;
-function getAPI() { return '/api/upload' }
+function getAPI() { return this.serverUrl.replace(/\/+$/,'') + '/upload' }
 
 function download(href, filename) {
 	var a = document.getElementById("download");
@@ -85,7 +99,7 @@ function download(href, filename) {
 	a.download = filename;
 	a.click();
 }
-function downloadDemo() { download('./data/' + this.demoFolder + '/data.zip', this.demoFolder + '.zip'); }
+function downloadDemo() { download(this.serverUrl.replace(/\/+$/,'') + '/data/' + this.demoFolder + '/data.zip', this.demoFolder + '.zip'); }
 function downloadExamples() { download(URL.createObjectURL(this.getExamplesBlob()), 'examples.json'); }
 
 function getExamplesBlob(e) {
@@ -146,7 +160,7 @@ function update() {
 
 function loadDemo() {
 	var load = this.load;
-	var path = '/data/' + this.demoFolder + '/';
+	var path = this.serverUrl.replace(/\/+$/,'') + '/demo/' + this.demoFolder + '/';
 	tmp_filename = undefined;
 	var getFile = function(url) {
 		return fetch(url, { method: "GET" })
@@ -194,7 +208,7 @@ function submit(files, component) {
 	formData.append("attributes", files.attributes);
 	formData.append("rules", files.rules);
 	formData.append("examples", files.examples);
-	return fetch(getAPI(), { method: "POST", body: formData })
+	return fetch(component.getAPI(), { method: "POST", body: formData })
 		.then(response => receive(response))
 		.catch(function(msg) { component.loadMsg = msg; })
 }	

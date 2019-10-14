@@ -48,6 +48,11 @@
 			</table>
 			<div>
 				<button @click="generate" class="btn btn-sm btn-success">Refresh</button>
+				<button @click="$parent.computeSrcLinks" class="btn btn-sm btn-info">Recompute</button>
+				<img width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" 
+				:title="'In most cases use Refresh after applying filters, changing some visual options and physics. Recompute should be only used after modifications of examples and sending them to server.'">
+			</div>
+			<div>
 				<input type="checkbox" v-model="advanced">
 				<label>Physics</label>
 			</div>
@@ -67,7 +72,7 @@
 				<td></td>
 				<td v-html="decisionsToString(rule.decisions)"></td>
 			</tr></table>
-			<img v-else width="25px" src="/img/help.png" alt="help icon" data-toggle="tooltip" 
+			<img v-else width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" 
 				:title="'Click on node in Read mode to display detail informations about node.'">
 		</div>
 	</div>
@@ -387,9 +392,11 @@ export default {
 }
 input[type=radio] { margin-left: 10px; vertical-align: middle;}
 #graph-options input[type=checkbox] {
-	margin-left: 10px;
 	height: 20px;
 	width: 20px;
+}
+#graph-options > div > :nth-child(2) {
+	margin-left: 10px;
 }
 #graph-options input[type=number] {
 	width: 50px;

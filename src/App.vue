@@ -3,13 +3,15 @@
     <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
     <div class="tabs">
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Setup</a>
-        <a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
-        <a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
-        <a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Attributes</a>
-        <a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Graph</a>
-		<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
-		<div v-if="activetab >= 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
-		<div>F11 Fullscreen</div>
+		<template v-if="attributes.length > 0">
+			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
+			<a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
+			<a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Attributes</a>
+			<a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Graph</a>
+			<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
+			<div v-if="activetab >= 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
+			<div>F11 Fullscreen</div>
+		</template>
     </div>
     <div id="app-content"><div>
         <FormLoader v-show="activetab==1"></FormLoader>
