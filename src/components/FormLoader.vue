@@ -1,7 +1,7 @@
 <template>
 	<div class="form-loader">
 		<form style="max-width: 500px;">
-			<div class="form-group input-group col-xs-12">
+			<div class="form-group input-group col-xs-12 d-flex flex-row">
 				<label>URL server</label>
 				<input class="input form-control-sm" v-model="serverUrl">
 			</div>
@@ -37,6 +37,7 @@
 				<option v-for="demo in demoList" :value="demo" :key="demo">{{ demo }}</option>
 			</select>
 			<a id="download" style="display:none;"></a>
+			<button style="margin-left: 15px" class="btn btn-sm btn-secondary" @click="downloadGuide">Download PDF guide</button>
 		</div>
 		<div class="tabs" v-if="attributes.length > 0">
 			<a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
@@ -67,7 +68,7 @@ export default {
 	},
 	methods: { 
 		setAttributes, setRules, setExamples, browseAttributes, browseRules, browseExamples, getAPI,
-		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob, load, preprocessing,
+		submit, loadDemo, downloadExamples, downloadDemo, update, getExamplesBlob, load, preprocessing, download,
 		getDemoList() {
 			let component = this;
 			let path = this.serverUrl + '/demo';
@@ -75,6 +76,9 @@ export default {
 				component.demoList = response;
 				component.demoFolder = component.demoList[0];
 			});
+		},
+		downloadGuide() {
+			this.download('guide.pdf', 'guide.pdf');
 		}
 	},
 	components: { Attributes, Characteristics },

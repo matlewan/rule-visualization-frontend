@@ -64,7 +64,7 @@
 				</tr>
 			</table>
 		</div>
-		<div id="graph-rule">
+		<div id="graph-rule" class="d-flex flex-row">
 			<table class="table-sm" v-if="rule != undefined"><tr>
 				<td>{{ rule.id }}</td>
 				<td @click="setRule(rule.id)" class="condition" v-html="conditionsToString(rule.conditions)"></td>
@@ -74,6 +74,8 @@
 			</tr></table>
 			<img v-else width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" 
 				:title="'Click on node in Read mode to display detail informations about node.'">
+			<img id="zoomIn" width="25px" height="25px" src="img/zoom_in.png" alt="zoom in button">
+			<img id="zoomOut" width="25px" height="25px" src="img/zoom_out.png" alt="zoom out button">
 		</div>
 	</div>
 </template>
@@ -273,15 +275,25 @@ export default {
 			setTimeout( () => simulation.stop(), 1500);
 
 			function initGraph(tempData){
+				let zoom = d3.zoom().scaleExtent([1 / 10, 8]).on("zoom", zoomed);
 				d3.select(graphCanvas)
 					.call(d3.drag().subject(dragsubject).on("start", dragstarted).on("drag", dragged).on("end",dragended))
-					.call(d3.zoom().scaleExtent([1 / 10, 8]).on("zoom", zoomed));
+					.call(zoom);
 					
 				simulation.nodes(tempData.nodes)
 						.on("tick",simulationUpdate);
 
 				simulation.force("link")
 						.links(tempData.edges);
+
+				d3.select('#zoomIn').on('click', function() {
+					transform.k *= 1.2;
+					simulationUpdate();
+				});
+				d3.select('#zoomOut').on('click', function() {
+					transform.k /= 1.2;
+					simulationUpdate();
+				});
 
 				function simulationUpdate() {
 					context.save();
@@ -410,7 +422,12 @@ input[type=radio] { margin-left: 10px; vertical-align: middle;}
 	position: absolute;
 	top: 0;
 	background-color: white;
+	display: flex;
+	flex-direction: column;
 }
+
+#zoomIn { margin-left: 100px;}
+#zoomIn,#zoomOut { cursor: pointer;}
 
 #graphDiv {
 	position: absolute;
