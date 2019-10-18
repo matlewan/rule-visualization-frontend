@@ -14,4 +14,4 @@ npm run build
 ```
 java -jar <server_path>/server.jar
 ```
-
+REST server (server.jar file) is available in RuleVisualization.zip.
