@@ -4,11 +4,11 @@
 			<template>
 				<tr>
 					<td>Contrast</td>
-					<td><vue-slider class="slider" :silent="true" v-model="matrixOptions.contrast" :max="20" :min="1" :interval="1"/></td>
+					<td><vue-slider class="slider" :silent="true" v-model="matrixOptions.contrast" :tooltipPlacement="'right'" :max="20" :min="1" :interval="1"/></td>
 				</tr>
 				<tr>
 					<td>Matrix size</td>
-					<td><vue-slider class="slider" :silent="true" v-model="matrixOptions.cellSize" :max="100" :min="3" :interval="1"/></td>
+					<td><vue-slider class="slider" :silent="true" v-model="matrixOptions.cellSize" :tooltipPlacement="'right'" :max="100" :min="3" :interval="1"/></td>
 				</tr>
 				<tr>
 					<td>Cell value</td>
@@ -94,7 +94,10 @@ export default {
 	margin: 0 10px 5px 0;
 }
 .setup-table {
-	width: 300px;
+	width: 250px;
+}
+.setup-table select {
+	width: 100%;
 }
 .setup-table td,th { padding: 5px; }
 </style>

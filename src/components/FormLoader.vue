@@ -1,28 +1,28 @@
 <template>
 	<div class="form-loader">
 		<form style="max-width: 500px;">
-			<div class="form-group input-group col-xs-12 d-flex flex-row">
-				<label>URL server</label>
+			<div class="input-group col-xs-12 d-flex flex-row align-items-center">
+				<label class="width-equi">Server URL</label>
 				<input class="input form-control-sm" v-model="serverUrl">
-			</div>
+			</div><div style="height: 7px;"/>
 			<div class="form-group">
 				<input type="file" class="file" id="attributes" style="display: none;" @change="setAttributes" />
 				<div class="input-group col-xs-12">
-					<button class="browse btn-sm btn-secondary input" type="button" @click="browseAttributes" >Browse</button>
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseAttributes" >Browse</button>
 					<input id="attributesText" type="text" class="form-control-sm input" disabled placeholder="Attributes (JSON)" />
 				</div>
 			</div>
 			<div class="form-group">
 				<input type="file" class="file" id="rules" style="display: none;" @change="setRules" />
 				<div class="input-group col-xs-12">
-					<button class="browse btn-sm btn-secondary input" type="button" @click="browseRules">Browse</button>
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseRules">Browse</button>
 					<input id="rulesText" type="text" class="form-control-sm input" disabled placeholder="Rules (XML)" />
 				</div>
 			</div>
 			<div class="form-group">
 				<input type="file" class="file" id="examples" style="display: none;" @change="setExamples" />
 				<div class="input-group col-xs-12">
-					<button class="browse btn-sm btn-secondary input" type="button" @click="browseExamples">Browse</button>
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseExamples">Browse</button>
 					<input id="examplesText" type="text" class="form-control-sm input" disabled placeholder="Examples (JSON) - optional" />
 				</div>
 			</div>
@@ -34,10 +34,11 @@
 			<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
 			<label>Demo: </label>
 			<select v-model="demoFolder" class="form-control-sm">
+				<option :value="''" :key="''"></option>
 				<option v-for="demo in demoList" :value="demo" :key="demo">{{ demo }}</option>
 			</select>
 			<a id="download" style="display:none;"></a>
-			<button style="margin-left: 15px" class="btn btn-sm btn-secondary" @click="downloadGuide">Download PDF guide</button>
+			<button style="margin-left: 15px" class="btn btn-sm btn-secondary" @click="downloadGuide">PDF guide</button>
 		</div>
 		<div class="tabs" v-if="attributes.length > 0">
 			<a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
@@ -61,7 +62,7 @@ export default {
 			loadMsg: "",
 			activetab: 1,
 			files: {},
-			demoFolder: 'prioritisation',
+			demoFolder: '',
 			serverUrl: 'http://localhost:8081',
 			demoList: ['prioritisation', 'windsor'],
 		};
@@ -74,7 +75,6 @@ export default {
 			let path = this.serverUrl + '/demo';
 			fetch(path, { method: "GET" }).then( response => response.json() ).then(response => {
 				component.demoList = response;
-				component.demoFolder = component.demoList[0];
 			});
 		},
 		downloadGuide() {
@@ -103,7 +103,12 @@ function download(href, filename) {
 	a.download = filename;
 	a.click();
 }
-function downloadDemo() { download(this.serverUrl.replace(/\/+$/,'') + '/data/' + this.demoFolder + '/data.zip', this.demoFolder + '.zip'); }
+function downloadDemo() { 
+	if (this.demoFolder == '') {
+		alert('Choose demo to download.'); return;
+	}
+	download(this.serverUrl.replace(/\/+$/,'') + '/demo/' + this.demoFolder + '/data.zip', this.demoFolder + '.zip'); 
+}
 function downloadExamples() { download(URL.createObjectURL(this.getExamplesBlob()), 'examples.json'); }
 
 function getExamplesBlob(e) {
@@ -155,7 +160,7 @@ function update() {
 		loadMatching(dirtyExamples, data.examples);
 		component.$root.$emit('updateExamples-ok');
 		var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
-		component.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
+		component.loadMsg = "Current file: " + (tmp_filename == undefined ? ('Demo (' + component.demoFolder + ')') : tmp_filename) + "        " +  time;
 		component.files = files;
 	}).catch(function(msg) {
 		component.loadMsg = msg;
@@ -163,6 +168,9 @@ function update() {
 }
 
 function loadDemo() {
+	if (this.demoFolder == '') {
+		alert('Choose demo to load.'); return;
+	}
 	var load = this.load;
 	var path = this.serverUrl.replace(/\/+$/,'') + '/demo/' + this.demoFolder + '/';
 	tmp_filename = undefined;
@@ -228,7 +236,8 @@ function preprocessing(attributes, examples, rules, matchings) { // initial oper
 
 	this.$parent.load(attributes, rules, characteristics, examples);
 	var d = new Date(), time = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => (v < 10) ? '0'+v : v).join(':');
-	this.loadMsg = "Current file: " + (tmp_filename == undefined ? 'Demo' : tmp_filename) + "        " +  time;
+	this.loadMsg = "Current file: " + (tmp_filename == undefined ? ('Demo (' + this.demoFolder + ')') : tmp_filename) + "        " +  time;
+		
 }
 
 function loadExamples(data) {
@@ -313,14 +322,14 @@ function loadCharacteristics(characteristics, rules) {
 		'Coverage': {min: 0, max: n},
 		'CoverageFactor': {min: 0, max: 1},
 		'Epsilon': {min: 0, max: 1},
-		'EpsilonPrime': {min: 0, max: n*3},
+		'EpsilonPrime': {min: 0, max: 0},
 		'NegativeCoverage': {min: 0, max: n},
 		'Strength': {min: 0, max: 1},
 		'Support': {min: 0, max: n},
 		'AConfirmation': {min: -1, max: 1},
-		'C1Confirmation': {min: -3*n, max: 3*n},
+		'C1Confirmation': {min: 0, max: 0},
 		'FConfirmation': {min: -1, max: 1},
-		'LConfirmation': {min: -3, max: 1},
+		'LConfirmation': {min: 0, max: 1},
 		'SConfirmation': {min: -1, max: 1},
 		'ZConfirmation': {min: -1, max: 1},
 	}
@@ -328,13 +337,18 @@ function loadCharacteristics(characteristics, rules) {
 		var c = characteristics[name];
 		c.name = name;
 		Vue.set(c, 'dispName', name);
-		c.active = c.range[0] != c.range[1];
+		c.active = (['Confidence', 'CoverageFactor', 'Epsilon', 'Strength', 'Support'].indexOf(name) >= 0);
 		c.filter = c.active;
 		c.display = c.active;
 		c.range[0] = Math.floor(c.range[0] * 1000) / 1000;
 		c.range[1] = Math.ceil(c.range[1] * 1000) / 1000;
+		let domain = characteristicsDomain[name];
 		c.min = c.range[0] > 0 ? 0 : (c.range[0] > -1) ? -1 : Math.floor(c.range[0]);
 		c.max = c.range[1] < 1 ? 1 : Math.ceil(c.range[1].toPrecision(2));
+		if (domain != undefined) {
+			c.min = Math.min(c.min, domain.min);
+			c.max = Math.max(c.max, domain.max);
+		}
 		c.intervals = 20;
 	}
 }
@@ -357,10 +371,11 @@ function loadCharacteristics(characteristics, rules) {
 	align-items: center;
 	margin-top: 3px;
 }
+.width-equi { width: 80px; text-align: center; }
 .form-buttons label { margin: 0; }
 .form-group { margin-bottom: 5px; width: 400px; }
 .tabs { margin-top: 10px; }
 .btn { margin-right: 10px; }
-.form-control-sm { width: 330px; }
+.form-control-sm { width: 320px; }
 select.form-control-sm { width: 10em; padding-left: 0; margin-left: 10px;}
 </style>

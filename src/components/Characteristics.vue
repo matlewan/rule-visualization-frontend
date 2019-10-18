@@ -4,7 +4,7 @@
             <thead>
                 <tr>
                     <th>Display name</th>
-                    <th>Active</th>
+                    <!-- <th>Active</!-->
                     <th>Table</th>
                     <th>Filter</th>
                     <th>Min</th>
@@ -15,7 +15,7 @@
             <tbody>
                 <tr v-for="(value, name) in characteristics" :key="name">
                     <td><input class="rounded-input" v-model="value.dispName"></td>
-                    <td><input type="checkbox" v-model="value.active" disabled=true></td>
+                    <!-- <td><input type="checkbox" v-model="value.active" disabled=true></td> -->
                     <td><input type="checkbox" v-model="value.display"></td>
                     <td><input type="checkbox" v-model="value.filter"></td>
 					<td><input type="number" v-model.number="value.min"></td>

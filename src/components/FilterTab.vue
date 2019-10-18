@@ -12,9 +12,9 @@
 			<tbody>
 				<tr v-for="(value, name) in activeCharacteristics" :key="name">
 					<td><label>{{ value.dispName }}</label></td>
-					<td><input type="number" v-model="value.range[0]" :step="value.step" :min="value.min" :max="value.range[1]"></td>
+					<td><input type="number" v-model="value.range[0]" :step="interval(value)" :min="value.min" :max="value.range[1]"></td>
 					<td><vue-slider class="slider" :silent="true" v-model="value.range" :max="value.max" :min="value.min" :interval="interval(value)"/></td>
-					<td><input type="number" v-model="value.range[1]" :step="value.step" :min="value.range[0]" :max="value.max"></td>
+					<td><input type="number" v-model="value.range[1]" :step="interval(value)" :min="value.range[0]" :max="value.max"></td>
 				</tr>
 			</tbody>
 		</table>

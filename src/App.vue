@@ -20,7 +20,7 @@
 					:ruleId="ruleId" :status="status">
 		</FilterTab>
 		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
-		<Statistics ref="statistics" v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
+		<Statistics v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
 		<AttributesMatrix v-show="activetab==4" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></AttributesMatrix>
 		<RulesGraph v-show="activetab==5" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></RulesGraph>
     </div></div>
@@ -217,10 +217,26 @@ export default {
 .scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
 .scrollbar::-webkit-scrollbar-thumb { background-color: #000000; border: 2px solid #555555; }
 
+.scrollbar { 
+	padding-right: 10px;
+	scrollbar-width: thin;
+	scrollbar-color: black;
+ }
+
+ @supports (-ms-ime-align:auto) {
+    .scrollbar {
+        padding-right: 20px !important;
+    }
+}
+
+
 /* Other general */
 input { border-radius: .2rem; border-style: solid; border-width: 1px; border-color: rgb(169,169,169); }
 .table > tbody > tr > td { vertical-align: middle; }
 .rule-value { text-align: right; font-weight: bold; color: #000077;}  /* for some reason not working in TableTab.vue */
 label { margin-bottom: 0 !important; }
+input[type=number] {
+	box-shadow:none !important;
+}
 
 </style>

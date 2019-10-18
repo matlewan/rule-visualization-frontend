@@ -2,7 +2,7 @@
     <div v-show="attributes.length > 0" style="float: left;">
 	<div class="d-flex flex-row">
 		<h5>Examples</h5>
-		<img width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" title="Click on rule to display only covered examples by this rule.">
+		<img width="25px" height="25px" src="img/help.png" alt="help icon" data-toggle="tooltip" title="Click on a rule to display only examples covered by that rule.">
     </div>
 	<div class="examples scrollbar">
         <table class="table table-sm">

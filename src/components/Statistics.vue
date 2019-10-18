@@ -30,7 +30,7 @@
 		<b>Average characteristics</b>
 		<div class="scrollbar"><table class="table table-sm" v-if="stats != undefined">
 			<template v-for="(value, name) in stats.characteristics">
-				<tr v-if="characteristics[name].active" :key="name">
+				<tr :key="name"> <!--v-if="characteristics[name].active"-->
 					<td @click="characteristicName = name" class="pointer">{{ name }}</td>
 					<td>{{ parseFloat((value / stats.count).toPrecision(3)) }}</td>
 				</tr>

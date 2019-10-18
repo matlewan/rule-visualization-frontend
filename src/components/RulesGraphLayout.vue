@@ -8,7 +8,7 @@
 			<table>
 				<tr>
 					<td>Rules</td>
-					<td>
+					<td colspan="2">
 						<input id="RGL-atleast" type="radio" :value="'L'" v-model="options.rulesType">
 						<label for="RGL-atleast">at least</label>
 						<input id="RGL-atmost" type="radio" :value="'M'" v-model="options.rulesType">
@@ -28,7 +28,7 @@
 					<template v-if="name == 'Coverage' || name == 'Semantic'">
 						<td>{{ name }}</td>
 						<td><vue-slider class="slider" :silent="true" v-model="option.value" :max="option.max" :min="option.min" :interval="option.interval"/></td>
-						<td><input type="number" v-model="option.value"></td>
+						<td><input type="number" v-model="option.value" step="0.01"></td>
 					</template>
 				</tr>
 				<tr v-for="(select, name) in selects" :key="name">
@@ -435,7 +435,7 @@ input[type=radio] { margin-left: 10px; vertical-align: middle;}
 	width: 100%; height:100%;
 	overflow: hidden;
 }
-.form-control-sm { height: calc(1rem + 10px); padding: 0; margin-left: 10px; }  /* used by select tag */
+.form-control-sm { width: 100px; height: calc(1rem + 10px); padding: 0; margin-left: 10px; }  /* used by select tag */
 	
 </style>
 
