@@ -343,8 +343,8 @@ function loadCharacteristics(characteristics, rules) {
 		c.range[0] = Math.floor(c.range[0] * 1000) / 1000;
 		c.range[1] = Math.ceil(c.range[1] * 1000) / 1000;
 		let domain = characteristicsDomain[name];
-		c.min = c.range[0] > 0 ? 0 : (c.range[0] > -1) ? -1 : Math.floor(c.range[0]);
-		c.max = c.range[1] < 1 ? 1 : Math.ceil(c.range[1].toPrecision(2));
+		c.min = c.range[0] >= 0 ? 0 : (c.range[0] >= -1) ? -1 : Math.floor(c.range[0]);
+		c.max = c.range[1] <= 1 ? 1 : Math.ceil(c.range[1].toPrecision(2));
 		if (domain != undefined) {
 			c.min = Math.min(c.min, domain.min);
 			c.max = Math.max(c.max, domain.max);
