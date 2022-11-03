@@ -9,7 +9,7 @@ Application for visualization of decision rules:
 - Rules correlations (matrix)
 - Rules correlations (graph)
 
-See screenshots below.
+[User guide](public/guide.pdf)
 
 <hr>
 
@@ -28,22 +28,3 @@ You can find instructions for running backend app in link above.
 
 ### Build for production
 `npm run build`
-
-<hr>
-
-## Screenshots
-
-### Setup and attributes preview
-![setup](public/img/screenshots/1_setup.png)
-
-### Rules
-![setup](public/img/screenshots/2_rules.png)
-
-### Statistics
-![setup](public/img/screenshots/3_statistics.png)
-
-### Matrix
-![setup](public/img/screenshots/4_matrix.png)
-
-### Graph
-![setup](public/img/screenshots/5_graph.png)
