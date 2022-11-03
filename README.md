@@ -1,25 +1,49 @@
 # rule-visualization-frontend
 
-### Application
-Application with run instructions is available in ZIP file.
-Requirements: Java 8 (or higher), Web Browser.
-Run application: readme.txt file.
+## Description
+
+Application for visualization of decision rules:
+- Setup and attributes preview
+- Rules explorer
+- Statistics
+- Rules correlations (matrix)
+- Rules correlations (graph)
+
+See screenshots below.
+
+<hr>
+
+## Development
 
 ### Backend - source code
-Tags: REST, Java, Jersey
-https://github.com/mateuszl1995/rule-visualization-backend
+Application requires working backend application.<br>
+You can download backend application (source code) [here](https://github.com/matlewan/rule-visualization-backend).<br>
+You can find instructions for running backend app in link above.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### Installation
+`npm run install`
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### Build and run locally
+`npm run serve`
 
-### Runs server needed for application
-```
-java -jar <server_path>/server.jar
-```
+### Build for production
+`npm run build`
+
+<hr>
+
+## Screenshots
+
+### Setup and attributes preview
+![setup](public/img/screenshots/1_setup.png)
+
+### Rules
+![setup](public/img/screenshots/2_rules.png)
+
+### Statistics
+![setup](public/img/screenshots/3_statistics.png)
+
+### Matrix
+![setup](public/img/screenshots/4_matrix.png)
+
+### Graph
+![setup](public/img/screenshots/5_graph.png)
