@@ -9,6 +9,8 @@ Application for visualization of decision rules:
 - Rules correlations (matrix)
 - Rules correlations (graph)
 
+It is based on [ruleLearn library project](https://github.com/ruleLearn/rulelearn).
+
 [User guide](public/guide.pdf)
 
 <hr>

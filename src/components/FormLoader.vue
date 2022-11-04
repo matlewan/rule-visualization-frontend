@@ -73,7 +73,7 @@ export default {
 		getDemoList() {
 			let component = this;
 			let path = this.serverUrl + '/demo';
-			fetch(path, { method: "GET" }).then( response => response.json() ).then(response => {
+			fetch(path).then( response => response.json() ).then(response => {
 				component.demoList = response;
 			});
 		},
