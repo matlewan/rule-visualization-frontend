@@ -2,28 +2,28 @@
 	<div class="form-loader">
 		<form style="max-width: 500px;">
 			<div class="input-group col-xs-12 d-flex flex-row align-items-center">
-				<label class="width-equi">Server URL</label>
+				<label style="padding-top: 7px; padding-right: 5px">Server URL</label>
 				<input class="input form-control-sm" v-model="serverUrl">
 			</div><div style="height: 7px;"/>
 			<div class="form-group">
 				<input type="file" class="file" id="attributes" style="display: none;" @change="setAttributes" />
 				<div class="input-group col-xs-12">
-					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseAttributes" >Browse</button>
 					<input id="attributesText" type="text" class="form-control-sm input" disabled placeholder="Attributes (JSON)" />
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseAttributes" >...</button>
 				</div>
 			</div>
 			<div class="form-group">
 				<input type="file" class="file" id="rules" style="display: none;" @change="setRules" />
 				<div class="input-group col-xs-12">
-					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseRules">Browse</button>
 					<input id="rulesText" type="text" class="form-control-sm input" disabled placeholder="Rules (XML)" />
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseRules">...</button>
 				</div>
 			</div>
 			<div class="form-group">
 				<input type="file" class="file" id="examples" style="display: none;" @change="setExamples" />
 				<div class="input-group col-xs-12">
-					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseExamples">Browse</button>
 					<input id="examplesText" type="text" class="form-control-sm input" disabled placeholder="Examples (JSON) - optional" />
+					<button class="width-equi browse btn-sm btn-secondary input" type="button" @click="browseExamples">...</button>
 				</div>
 			</div>
 		</form>
@@ -371,7 +371,7 @@ function loadCharacteristics(characteristics, rules) {
 	align-items: center;
 	margin-top: 3px;
 }
-.width-equi { width: 80px; text-align: center; }
+.width-equi { width: 40px; text-align: center; }
 .form-buttons label { margin: 0; }
 .form-group { margin-bottom: 5px; width: 400px; }
 .tabs { margin-top: 10px; }

@@ -1,12 +1,12 @@
 <template>
   <div id="app" class="container">
     <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
-    <div class="tabs">
+    <div id="navbar" class="tabs">
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Setup</a>
 		<template v-if="attributes.length > 0">
 			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
 			<a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
-			<a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Attributes</a>
+			<a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Matrix</a>
 			<a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Graph</a>
 			<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
 			<div v-if="activetab >= 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
@@ -168,15 +168,16 @@ export default {
 
 /* Main div */
 #app {  
-	min-width: 420px !important;
-	width: 100% !important;
-	max-width: 100% !important;
-	min-height: 100vh !important;
-	margin: 0 !important;
-	padding: 0 0 5px 15px !important;
+	min-width: 420px;
+	width: 100%;
+	max-width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	margin-top: 10px;
+	padding: 0 0 5px 0;
 	font-size: 0.9em;
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 }
 #app-content {
 	position: relative;
@@ -192,15 +193,15 @@ export default {
 /* Cards/tabs menu */
 .tabs {
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	margin: 0 20px 5px 0;
-	padding-left: 10px;
 	border-bottom: 1px #ccc solid;
-	align-items: center;
+	align-items: flex-start;
 }
-.tabs a{
+.tabs a {
+	width: 200px;
 	padding: 4px 24px;
-	cursor: pointer; border: 1px solid #ccc; border-left: none; border-bottom: none; background-color: #f1f1f1; font-weight: bold;
+	cursor: pointer; border: 1px solid #ccc; border-left: none; background-color: #f1f1f1; font-weight: bold;
 }
 .tabs > div { margin-left: 20px; }
 .tabs > div * { vertical-align: middle; }
@@ -209,7 +210,7 @@ export default {
 .tabs ul { list-style-type: none; margin-left: 20px; }
 .tabs a:first-child { border-left: 1px solid #ccc; }
 .tabs a:hover { background-color: #aaa; color: #fff; }
-.tabs a.active { background-color: #fff; color: #484848; border-bottom: 2px solid #fff; cursor: default; }
+.tabs a.active { background-color: #fff; color: #484848; cursor: default; }
 
 /* Scrollbar */
 .rule-table.scrollbar::-webkit-scrollbar-track { margin-top: 30px; }
@@ -225,7 +226,7 @@ export default {
 
  @supports (-ms-ime-align:auto) {
     .scrollbar {
-        padding-right: 20px !important;
+        padding-right: 20px;
     }
 }
 
@@ -234,9 +235,9 @@ export default {
 input { border-radius: .2rem; border-style: solid; border-width: 1px; border-color: rgb(169,169,169); }
 .table > tbody > tr > td { vertical-align: middle; }
 .rule-value { text-align: right; font-weight: bold; color: #000077;}  /* for some reason not working in TableTab.vue */
-label { margin-bottom: 0 !important; }
+label { margin-bottom: 0; }
 input[type=number] {
-	box-shadow:none !important;
+	box-shadow:none;
 }
 
 </style>
