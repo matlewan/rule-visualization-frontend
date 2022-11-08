@@ -1,34 +1,40 @@
 <template>
-  <div id="app" class="container">
+  <div id="app">
     <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
     <div id="navbar" class="tabs">
         <a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Setup</a>
 		<template v-if="attributes.length > 0">
-			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Rules</a>
-			<a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Statistics</a>
-			<a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Matrix</a>
-			<a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Graph</a>
+			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Attributes</a>
+			<a @click="activetab=3" :class="[ activetab === 3 ? 'active' : '' ]">Characteristics</a>
+			<a @click="activetab=4" :class="[ activetab === 4 ? 'active' : '' ]">Rules</a>
+			<a @click="activetab=5" :class="[ activetab === 5 ? 'active' : '' ]">Statistics</a>
+			<a @click="activetab=6" :class="[ activetab === 6 ? 'active' : '' ]">Matrix</a>
+			<a @click="activetab=7" :class="[ activetab === 7 ? 'active' : '' ]">Graph</a>
 			<div v-if="activetab > 1"><input type="checkbox" v-model="showFilter"><label>Filter</label></div>
-			<div v-if="activetab >= 4"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
+			<div v-if="activetab >= 6"><input type="checkbox" v-model="visualization"><label>Configuration</label></div>
 			<div>F11 Fullscreen</div>
 		</template>
     </div>
     <div id="app-content"><div>
         <FormLoader v-show="activetab==1"></FormLoader>
-		<FilterTab  v-show="showFilter && activetab != 1" @apply="filterRules" @match="match" @setRule="setRule" 
+		<Attributes v-show="activetab==2" :attributes="attributes"></Attributes>
+		<Characteristics v-show="activetab==3" :characteristics="characteristics"></Characteristics>
+		<FilterTab  v-show="showFilter && activetab > 3" @apply="filterRules" @match="match" @setRule="setRule" 
 					:examples="examples" :filteredExamples="filteredExamples" :characteristics="characteristics" :attributes="attributes" 
 					:ruleId="ruleId" :status="status">
 		</FilterTab>
-		<TableTab  	v-show="activetab==2" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
-		<Statistics v-show="activetab==3" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
-		<AttributesMatrix v-show="activetab==4" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></AttributesMatrix>
-		<RulesGraph v-show="activetab==5" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></RulesGraph>
+		<TableTab  	v-show="activetab==4" @setRule="setRule" :rules="rules" :characteristics="characteristics"></TableTab>
+		<Statistics v-show="activetab==5" :attributes="attributes" :characteristics="characteristics" :rules="rules"></Statistics>
+		<AttributesMatrix v-show="activetab==6" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></AttributesMatrix>
+		<RulesGraph v-show="activetab==7" :attributes="activeAttributes" :characteristics="activeCharacteristics" :rules="rules" :srcRules="srcRules" :examples="examples" :setup="visualization"></RulesGraph>
     </div></div>
   </div>
 </template>
 
 <script>
 import FormLoader from "./components/FormLoader.vue";
+import Attributes from "./components/Attributes.vue";
+import Characteristics from "./components/Characteristics.vue";
 import FilterTab from "./components/FilterTab.vue";
 import TableTab from  "./components/TableTab.vue";
 import Statistics from  "./components/Statistics.vue";
@@ -134,7 +140,7 @@ export default {
 	},
   },
   components: {
-    FormLoader, FilterTab, TableTab, Statistics, AttributesMatrix, RulesGraph
+    FormLoader, Attributes, Characteristics, FilterTab, TableTab, Statistics, AttributesMatrix, RulesGraph
   },
   computed: {
 	filteredExamples: function(ruleId) {
@@ -162,18 +168,28 @@ export default {
 </script>
 
 <style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; text-align: left; }
+
+html {
+	width: 100%;
+    height: 100%;
+}
+body {
+	width: 100%;
+    height: 100%;
+	padding-top: 15px;
+}
+
 /* Vue default and reset */
 #app { font-family: "Avenir", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-align: center; color: #2c3e50; }
-* { box-sizing: border-box; margin: 0; padding: 0; text-align: left; }
 
 /* Main div */
 #app {  
 	min-width: 420px;
 	width: 100%;
-	max-width: 100%;
-	min-height: 100vh;
+	height: 100%;
 	margin: 0;
-	margin-top: 10px;
 	padding: 0 0 5px 0;
 	font-size: 0.9em;
 	display: flex;
@@ -182,12 +198,13 @@ export default {
 #app-content {
 	position: relative;
 	flex: 1;
+	flex-direction: column;
 }
+
 #app-content > div { 
 	position: absolute; top: 0; left: 0; right: 0; bottom: 0;
 	height: 100%;
-	display: flex;
-	flex-direction: row;
+	width: 100%;
 }
 
 /* Cards/tabs menu */

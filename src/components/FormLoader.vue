@@ -27,33 +27,31 @@
 				</div>
 			</div>
 		</form>
-		<span style="white-space: pre;">{{ loadMsg }}</span>
 		<div class="form-buttons">
 			<button class="btn btn-sm btn-success" @click="load">Load</button>
-			<button class="btn btn-sm btn-info" @click="loadDemo">Load demo</button>
-			<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download demo</button>
+		</div>
+		<br>
+		<form>
 			<label>Demo: </label>
 			<select v-model="demoFolder" class="form-control-sm">
 				<option :value="''" :key="''"></option>
 				<option v-for="demo in demoList" :value="demo" :key="demo">{{ demo }}</option>
 			</select>
+		</form>
+		<div class="form-buttons">
+			<button class="btn btn-sm btn-success" @click="loadDemo">Load</button>
+			<button class="btn btn-sm btn-secondary" v-if="attributes.length > 0" @click="downloadDemo">Download</button>
 			<a id="download" style="display:none;"></a>
-			<button style="margin-left: 15px" class="btn btn-sm btn-secondary" @click="downloadGuide">PDF guide</button>
 		</div>
-		<div class="tabs" v-if="attributes.length > 0">
-			<a @click="activetab=1" :class="[ activetab === 1 ? 'active' : '' ]">Attributes</a>
-			<a @click="activetab=2" :class="[ activetab === 2 ? 'active' : '' ]">Characteristics</a>
-		</div>
-		<div class="form-content scrollbar" v-if="attributes.length > 0">
-			<Attributes v-show="activetab==1" :attributes="attributes"></Attributes>
-			<Characteristics v-show="activetab==2" :characteristics="characteristics"></Characteristics>
+		<br>
+		<div>
+			<button class="btn btn-sm btn-secondary" @click="downloadGuide">PDF guide</button>
+			<span style="white-space: pre;">{{ loadMsg }}</span>
 		</div>
 	</div>
 </template>
 
 <script>
-import Attributes from "./Attributes.vue";
-import Characteristics from "./Characteristics.vue";
 
 export default {
 	name: "FormLoader",
@@ -81,7 +79,7 @@ export default {
 			this.download('guide.pdf', 'guide.pdf');
 		}
 	},
-	components: { Attributes, Characteristics },
+	components: {  },
 	computed: {
 		attributes: function() { return this.$parent.attributes; },
 		characteristics: function() { return this.$parent.characteristics; },

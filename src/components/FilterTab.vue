@@ -164,6 +164,15 @@ function checkAll() {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+.tabs {
+	display: flex;
+	flex-direction: row;
+}
+.tabs a {
+	width: 100px;
+}
+
 	/* Main elements sizes */
 	#filter-wrapper { display: flex; flex-direction: column;}
 	.filter {
